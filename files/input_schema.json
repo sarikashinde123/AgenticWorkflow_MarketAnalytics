@@ -1,0 +1,66 @@
+{
+  "business": {
+    "name": "PuneLaundry",
+    "type": "Laundry & Dry Cleaning Services",
+    "description": "An on-demand laundry and dry cleaning service operating across Pune region, offering doorstep pickup and delivery with express turnaround",
+    "website": "https://punelaundry.in",
+    "usp": "Same-day delivery, eco-friendly wash, transparent per-kg pricing, covers all Pune zones",
+    "service_area": "Pune, Maharashtra, India",
+    "zones": [
+      "Koregaon Park", "Baner", "Hinjewadi", "Kothrud", "Viman Nagar",
+      "Wakad", "Hadapsar", "Shivajinagar", "Aundh", "Pune Camp"
+    ]
+  },
+  "competitors": [
+    {
+      "name": "UClean Pune",
+      "website": "https://uclean.in",
+      "priority": "high",
+      "notes": "Franchise-based laundry chain with multiple Pune outlets"
+    },
+    {
+      "name": "Laundry Basket",
+      "website": "https://laundrybasket.in",
+      "priority": "high",
+      "notes": "App-based pickup and delivery laundry service active in Pune"
+    },
+    {
+      "name": "Washmart",
+      "website": "https://washmart.in",
+      "priority": "medium",
+      "notes": "Budget laundry service with Pune presence"
+    },
+    {
+      "name": "Mr. Fresh",
+      "website": "https://mrfresh.in",
+      "priority": "medium",
+      "notes": "Premium dry cleaning and laundry brand in Pune"
+    },
+    {
+      "name": "Fabcure",
+      "website": "https://fabcure.in",
+      "priority": "low",
+      "notes": "Fabric care and laundry startup targeting Pune"
+    }
+  ],
+  "scrape_targets": {
+    "pricing": true,
+    "features": true,
+    "reviews": true,
+    "content_blog": false,
+    "job_postings": false,
+    "homepage_messaging": true,
+    "service_areas": true,
+    "turnaround_time": true,
+    "app_ratings": true
+  },
+  "analysis_focus": [
+    "per-kg pricing comparison",
+    "pickup and delivery coverage zones in Pune",
+    "turnaround time (express vs standard)",
+    "service types: wash-fold, dry-clean, ironing, shoe care",
+    "app vs web booking experience",
+    "subscription plans and loyalty offers",
+    "customer review sentiment"
+  ]
+}

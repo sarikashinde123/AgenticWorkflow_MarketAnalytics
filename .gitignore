@@ -1,0 +1,40 @@
+# ─── Secrets ─── (never commit real keys; .env.example is the template)
+.env
+.env.local
+.env.*.local
+*.pem
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# ─── Node / Next.js ───
+node_modules/
+.next/
+out/
+build/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── Generated reports & logs ───
+backend/reports/*.pdf
+*.log
+
+# ─── Local tooling ───
+.agents/
+.claude/
+skills-lock.json
+
+# ─── OS / editors ───
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,16 @@
+{
+  "competitor_name": "UClean Pune",
+  "website": "https://uclean.in",
+  "scraped_at": "2026-06-30T23:25:45.170858",
+  "scrape_status": "partial_fallback",
+  "homepage_headline": "",
+  "homepage_usp": [],
+  "pricing": {},
+  "features": [],
+  "reviews_summary": {},
+  "blog_topics": [],
+  "job_postings": {},
+  "errors": [
+    "Used HTTP fallback"
+  ]
+}

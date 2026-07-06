@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Competitive Intelligence — PayEase</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper: #FAF7F0;
+  --paper-dim: #F1ECE0;
+  --ink: #16213E;
+  --ink-soft: #4A5578;
+  --accent: #E8804C;
+  --accent-dim: #F3CBB3;
+  --sage: #7A8B6F;
+  --sage-dim: #DCE3D5;
+  --rule: #D9D2C0;
+  --rule-strong: #16213E;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter', sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+.sheet{
+  max-width:880px;
+  margin:0 auto;
+  padding:0 32px 80px;
+}
+
+/* ── MASTHEAD ───────────────────────────────────── */
+.masthead{
+  padding:56px 0 32px;
+  border-bottom:3px solid var(--ink);
+}
+.masthead .eyebrow{
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.masthead h1{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:clamp(2.4rem, 5vw, 3.4rem);
+  line-height:1.05;
+  letter-spacing:-0.01em;
+}
+.masthead h1 em{
+  font-style:italic;
+  font-weight:300;
+  color:var(--ink-soft);
+}
+.masthead .sub{
+  margin-top:14px;
+  font-size:1.05rem;
+  color:var(--ink-soft);
+  max-width:62ch;
+}
+.masthead .location{
+  margin-top:16px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  letter-spacing:0.03em;
+  color:var(--accent);
+  padding:5px 12px;
+  border:1px solid var(--accent-dim);
+  border-radius:20px;
+  background:rgba(232,128,76,0.06);
+}
+.masthead .location svg{
+  flex-shrink:0;
+  color:var(--accent);
+}
+
+/* ── COVERAGE METER (signature element) ─────────── */
+.coverage{
+  margin:36px 0 0;
+  padding:22px 24px;
+  background:var(--paper-dim);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--accent);
+}
+.coverage-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.coverage-top .label{
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.coverage-top .value{
+  font-family:'Fraunces', serif;
+  font-size:1.3rem;
+  font-weight:600;
+}
+.coverage-bar{
+  display:flex;
+  gap:3px;
+  height:8px;
+}
+.coverage-bar i{
+  flex:1;
+  background:var(--rule);
+  border-radius:1px;
+}
+.coverage-bar i.filled{ background:var(--accent); }
+.coverage-note{
+  margin-top:12px;
+  font-size:0.85rem;
+  color:var(--ink-soft);
+}
+
+/* ── SECTIONS ───────────────────────────────────── */
+section{
+  padding:44px 0;
+  border-bottom:1px solid var(--rule);
+}
+section.no-rule{ border-bottom:none; }
+
+.section-head{
+  display:flex;
+  align-items:baseline;
+  gap:14px;
+  margin-bottom:22px;
+}
+.section-num{
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  color:var(--accent);
+  font-weight:600;
+}
+h2{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.5rem;
+  letter-spacing:-0.01em;
+}
+
+p.lead{
+  font-size:1.05rem;
+  max-width:68ch;
+}
+
+/* ── EMPTY-STATE CALLOUTS ───────────────────────── */
+.unfilled{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  padding:18px 20px;
+  background:transparent;
+  border:1px dashed var(--rule-strong);
+  opacity:0.85;
+}
+.unfilled .mark{
+  font-family:'JetBrains Mono', monospace;
+  font-size:18px;
+  color:var(--ink-soft);
+  line-height:1;
+}
+.unfilled p{
+  font-size:0.92rem;
+  color:var(--ink-soft);
+}
+.unfilled strong{ color:var(--ink); }
+
+/* ── PRICING TABLE ──────────────────────────────── */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:4px;
+}
+th{
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  text-align:left;
+  padding:0 0 12px;
+  color:var(--ink-soft);
+  border-bottom:2px solid var(--ink);
+}
+td{
+  padding:16px 0;
+  border-bottom:1px solid var(--rule);
+  vertical-align:top;
+}
+tr:last-child td{ border-bottom:none; }
+td.name{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.05rem;
+  white-space:nowrap;
+  padding-right:24px;
+}
+.tag-zero{
+  display:inline-block;
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.04em;
+  background:var(--sage-dim);
+  color:#3F5233;
+  padding:3px 10px;
+  border-radius:3px;
+  margin-right:8px;
+  font-weight:600;
+}
+
+/* ── FEATURE MATRIX ─────────────────────────────── */
+.matrix{
+  display:grid;
+  grid-template-columns:1fr auto;
+  border:1px solid var(--rule);
+}
+.matrix-row{
+  display:contents;
+}
+.matrix-row .feat-name{
+  padding:13px 18px;
+  font-size:0.95rem;
+  border-bottom:1px solid var(--rule);
+  border-right:1px solid var(--rule);
+}
+.matrix-row .feat-status{
+  padding:13px 22px;
+  border-bottom:1px solid var(--rule);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:64px;
+}
+.matrix-row:nth-child(odd) .feat-name,
+.matrix-row:nth-child(odd) .feat-status{
+  background:var(--paper-dim);
+}
+.matrix-row:last-child .feat-name,
+.matrix-row:last-child .feat-status{
+  border-bottom:none;
+}
+.yes{
+  color:#3F5233;
+  font-weight:700;
+  font-size:1.1rem;
+}
+.no{
+  color:var(--rule);
+  font-weight:700;
+  font-size:1.1rem;
+}
+.matrix-caption{
+  margin-top:10px;
+  font-size:0.82rem;
+  color:var(--ink-soft);
+  font-family:'JetBrains Mono', monospace;
+}
+
+/* ── GAPS LIST ──────────────────────────────────── */
+.gaps-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+  gap:1px;
+  background:var(--rule);
+  border:1px solid var(--rule);
+}
+.gap-card{
+  background:var(--paper);
+  padding:22px;
+}
+.gap-card .gap-label{
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:10px;
+  display:block;
+}
+.gap-card p{ font-size:0.92rem; }
+
+/* ── RECOMMENDATIONS (genuinely sequential, numbered) ── */
+.rec{
+  display:grid;
+  grid-template-columns:64px 1fr;
+  gap:0;
+  border-top:1px solid var(--rule);
+}
+.rec:last-child{ border-bottom:1px solid var(--rule); }
+.rec-num{
+  font-family:'Fraunces', serif;
+  font-size:2.2rem;
+  font-weight:300;
+  color:var(--accent-dim);
+  padding:22px 0;
+  line-height:1;
+}
+.rec-body{
+  padding:22px 0 22px 4px;
+}
+.rec-body h3{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.15rem;
+  margin-bottom:6px;
+}
+.rec-body p{
+  font-size:0.95rem;
+  color:var(--ink-soft);
+  max-width:62ch;
+}
+
+/* ── FOOTER ─────────────────────────────────────── */
+footer{
+  padding:36px 0 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  color:var(--ink-soft);
+  letter-spacing:0.04em;
+}
+
+@media print{
+  body{ background:#fff; }
+  .coverage{ break-inside:avoid; }
+  section{ break-inside:avoid; }
+}
+
+@media (max-width:600px){
+  .sheet{ padding:0 18px 60px; }
+  .masthead{ padding:36px 0 24px; }
+  .rec{ grid-template-columns:40px 1fr; }
+  .rec-num{ font-size:1.6rem; }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="eyebrow">
+      <span>Competitive Intelligence — Confidential</span>
+      <span>Fintech / Digital Payments</span>
+    </div>
+    <h1>PayEase <em>vs.</em> the Market</h1>
+    <p class="sub">A read on where PayEase stands against Razorpay, Cashfree and PayU — what's confirmed, what's still dark, and where to move first.</p>
+
+    <div class="location">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>Mumbai, Maharashtra — India</span>
+    </div>
+
+    <div class="coverage">
+      <div class="coverage-top">
+        <span class="label">Intelligence Coverage</span>
+        <span class="value">2 of 7 sections filled</span>
+      </div>
+      <div class="coverage-bar">
+        <i class="filled"></i><i class="filled"></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <p class="coverage-note">Competitor scraping returned thin data this run — pricing, threat scores, and messaging are not yet populated below. Treat the Gaps and Recommendations sections as directional rather than fully evidenced until the next scrape completes.</p>
+    </div>
+  </div>
+
+  <!-- 01 EXECUTIVE SUMMARY -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2>Executive Summary</h2>
+    </div>
+    <p class="lead">PayEase is uniquely positioned in the UPI payments market on the strength of a Zero MDR policy and built-in GST invoicing — neither of which competitors are confirmed to offer. The clearest open lane is the gig economy and offline merchants who need a lightweight bridge to online payment tools.</p>
+  </section>
+
+  <!-- 02 THREAT SCORES -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2>Competitor Threat Scores</h2>
+    </div>
+    <div class="unfilled">
+      <span class="mark">—</span>
+      <p><strong>No threat scores available.</strong> Scraping didn't return enough signal (reviews, hiring, feature counts) on Razorpay, Cashfree, or PayU to score them this cycle. Re-run Agent 2 with the fallback scraper enabled, or scrape job boards directly.</p>
+    </div>
+  </section>
+
+  <!-- 03 PRICING -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2>Pricing Comparison</h2>
+    </div>
+    <table>
+      <tr><th>Provider</th><th>Pricing Structure</th></tr>
+      <tr>
+        <td class="name">PayEase</td>
+        <td><span class="tag-zero">ZERO MDR</span>Flat 0% transaction fee — no competitor pricing confirmed yet for direct comparison.</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- 04 FEATURE MATRIX -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2>Feature Matrix</h2>
+    </div>
+    <div class="matrix">
+      <div class="matrix-row"><div class="feat-name">UPI Payments</div><div class="feat-status"><span class="yes">✓</span></div></div>
+      <div class="matrix-row"><div class="feat-name">Payment Links</div><div class="feat-status"><span class="yes">✓</span></div></div>
+      <div class="matrix-row"><div class="feat-name">QR Code</div><div class="feat-status"><span class="yes">✓</span></div></div>
+      <div class="matrix-row"><div class="feat-name">API Integration</div><div class="feat-status"><span class="yes">✓</span></div></div>
+      <div class="matrix-row"><div class="feat-name">GST Invoicing</div><div class="feat-status"><span class="yes">✓</span></div></div>
+      <div class="matrix-row"><div class="feat-name">Instant Settlement</div><div class="feat-status"><span class="yes">✓</span></div></div>
+      <div class="matrix-row"><div class="feat-name">Card Payments</div><div class="feat-status"><span class="no">·</span></div></div>
+      <div class="matrix-row"><div class="feat-name">Net Banking</div><div class="feat-status"><span class="no">·</span></div></div>
+      <div class="matrix-row"><div class="feat-name">International Payments</div><div class="feat-status"><span class="no">·</span></div></div>
+      <div class="matrix-row"><div class="feat-name">EMI Options</div><div class="feat-status"><span class="no">·</span></div></div>
+      <div class="matrix-row"><div class="feat-name">Recurring Billing</div><div class="feat-status"><span class="no">·</span></div></div>
+      <div class="matrix-row"><div class="feat-name">Analytics Dashboard</div><div class="feat-status"><span class="no">·</span></div></div>
+    </div>
+    <p class="matrix-caption">PAYEASE ONLY — competitor feature columns not yet populated</p>
+  </section>
+
+  <!-- 05 MESSAGING -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2>Messaging &amp; Positioning</h2>
+    </div>
+    <div class="unfilled">
+      <span class="mark">—</span>
+      <p><strong>No competitor messaging data collected.</strong> Homepage headlines and USPs for Razorpay, Cashfree, and PayU weren't captured in this scrape run.</p>
+    </div>
+  </section>
+
+  <!-- 06 CONTENT & HIRING -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2>Content &amp; Hiring Signals</h2>
+    </div>
+    <div class="unfilled">
+      <span class="mark">—</span>
+      <p><strong>No content or hiring trends identified.</strong> Blog topics and job posting counts weren't available for analysis this cycle.</p>
+    </div>
+  </section>
+
+  <!-- 07 GAPS -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">07</span>
+      <h2>Gaps &amp; Opportunities</h2>
+    </div>
+    <div class="gaps-grid">
+      <div class="gap-card">
+        <span class="gap-label">Pricing</span>
+        <p>Zero MDR and bundled GST invoicing remain unmatched as far as confirmed data shows — a clean differentiator to lead with in messaging.</p>
+      </div>
+      <div class="gap-card">
+        <span class="gap-label">Feature</span>
+        <p>No vernacular language support or dedicated freelancer tooling — both are underserved needs in the broader UPI market.</p>
+      </div>
+      <div class="gap-card">
+        <span class="gap-label">Market</span>
+        <p>Gig economy workers and offline merchants needing a simple bridge to online payments are an open, largely unaddressed segment.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 RECOMMENDATIONS — genuinely sequential, so numbered -->
+  <section class="no-rule">
+    <div class="section-head">
+      <span class="section-num">08</span>
+      <h2>Recommended Next Moves</h2>
+    </div>
+
+    <div class="rec">
+      <div class="rec-num">1</div>
+      <div class="rec-body">
+        <h3>Expand the feature set</h3>
+        <p>Introduce vernacular language support and stronger freelancer-specific tooling to reach the underserved segment of the market.</p>
+      </div>
+    </div>
+
+    <div class="rec">
+      <div class="rec-num">2</div>
+      <div class="rec-body">
+        <h3>Target the gig economy directly</h3>
+        <p>Build tailored solutions for gig workers — starting with seamless WhatsApp-based payment links that require no app download.</p>
+      </div>
+    </div>
+
+    <div class="rec">
+      <div class="rec-num">3</div>
+      <div class="rec-body">
+        <h3>Bridge offline and online services</h3>
+        <p>Develop tools that let offline merchants adopt online payment acceptance without disrupting how they already operate.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>PayEase Competitive Analysis — Generated by Agentic CI System</span>
+    <span>Confidence: Partial · Re-scrape recommended</span>
+  </footer>
+
+</div>
+</body>
+</html>

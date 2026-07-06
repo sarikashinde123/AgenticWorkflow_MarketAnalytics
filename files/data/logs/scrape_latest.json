@@ -1,0 +1,22 @@
+Scraping Results Log:
+
+1. UClean Pune:
+   - Status: Partial Fallback
+   - Output File: data\raw\uclean_pune_raw.json
+   - Features: No Pricing, No Features
+
+2. Laundry Basket:
+   - Status: Failure
+   - Features: No Pricing, No Features
+
+3. Washmart:
+   - Status: Partial Fallback
+   - Output File: data\raw\washmart_raw.json
+   - Features: No Pricing, No Features
+
+4. Mr. Fresh:
+   - Status: Does Not Exist
+
+5. Fabcure:
+   - Status: Failure
+   - Features: No Pricing, No Features

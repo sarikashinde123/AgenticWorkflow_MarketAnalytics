@@ -1,0 +1,34 @@
+{
+  "competitors": [
+    {
+      "name": "UClean Pune",
+      "script_path": "scripts/scrape_uclean_pune.py",
+      "website": "https://uclean.in",
+      "priority": "high"
+    },
+    {
+      "name": "Laundry Basket",
+      "script_path": "scripts/scrape_laundry_basket.py",
+      "website": "https://laundrybasket.in",
+      "priority": "high"
+    },
+    {
+      "name": "Washmart",
+      "script_path": "scripts/scrape_washmart.py",
+      "website": "https://washmart.in",
+      "priority": "medium"
+    },
+    {
+      "name": "Mr. Fresh",
+      "script_path": "scripts/scrape_mr._fresh.py",
+      "website": "https://mrfresh.in",
+      "priority": "medium"
+    },
+    {
+      "name": "Fabcure",
+      "script_path": "scripts/scrape_fabcure.py",
+      "website": "https://fabcure.in",
+      "priority": "low"
+    }
+  ]
+}

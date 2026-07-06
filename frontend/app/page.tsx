@@ -1,0 +1,58 @@
+import PipelineForm from '@/components/PipelineForm'
+import PipelineStatus from '@/components/PipelineStatus'
+import ReportViewer from '@/components/ReportViewer'
+
+export default function Home() {
+  return (
+    <main className="min-h-screen">
+      {/* Terminal top bar */}
+      <header className="sticky top-0 z-20 border-b border-[var(--line)] backdrop-blur-md bg-[var(--ink)]/75">
+        <div className="mx-auto max-w-6xl px-5 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* crosshair mark */}
+            <svg className="h-7 w-7 text-[var(--signal)]" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeOpacity=".5" />
+              <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M12 1v4M12 19v4M1 12h4M19 12h4" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            </svg>
+            <div className="leading-none">
+              <div className="font-display text-lg text-[var(--bone)] tracking-wide">RECON</div>
+              <div className="eyebrow" style={{ fontSize: '.55rem', letterSpacing: '.32em' }}>Competitive intelligence</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--dim)]">
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[var(--confirm)]" style={{ boxShadow: '0 0 6px var(--confirm)' }} />
+            <span className="hidden sm:inline">SYSTEM</span> ONLINE
+          </div>
+        </div>
+      </header>
+
+      {/* Hero — thesis */}
+      <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 animate-in text-center">
+        <p className="eyebrow mb-4">Field reconnaissance · powered by Claude</p>
+        <h1 className="font-display text-[var(--bone)] leading-[1.06] tracking-tight text-3xl sm:text-4xl md:text-5xl mx-auto max-w-2xl text-balance"
+            style={{ fontWeight: 500 }}>
+          Command your local market.
+        </h1>
+        <p className="mt-4 text-[var(--dim)] max-w-lg mx-auto text-[15px] leading-relaxed">
+          Five agents map the competitors around you, size up their footprint, and
+          hand you a strategic dossier — one run, no analysts required.
+        </p>
+      </section>
+
+      {/* Operations grid */}
+      <section className="mx-auto max-w-6xl px-5 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+          <div className="lg:col-span-2 lg:sticky lg:top-20">
+            <PipelineForm />
+          </div>
+          <div className="lg:col-span-3 space-y-6">
+            <PipelineStatus />
+            <ReportViewer />
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}

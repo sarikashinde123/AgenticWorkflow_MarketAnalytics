@@ -1,0 +1,19 @@
+{
+    "competitor_name": "Laundry Basket",
+    "website": "https://laundrybasket.in",
+    "scraped_at": "2026-06-30 23:12:42",
+    "scrape_status": "failure",
+    "pricing": null,
+    "features": null,
+    "homepage_headline": null,
+    "homepage_usp": null,
+    "reviews_summary": null,
+    "blog_topics": null,
+    "job_postings": null,
+    "service_areas": null,
+    "turnaround_time": null,
+    "app_ratings": null,
+    "errors": [
+        "Page.goto: net::ERR_NAME_NOT_RESOLVED at https://laundrybasket.in/\nCall log:\n  - navigating to \"https://laundrybasket.in/\", waiting until \"networkidle\"\n"
+    ]
+}

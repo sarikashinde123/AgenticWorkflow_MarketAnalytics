@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PuneLaundry — Market Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #0d1117;
+    --surface:    #111827;
+    --raised:     #1a2537;
+    --border:     #243047;
+    --muted:      #4b6080;
+    --body:       #94a3b8;
+    --primary:    #e2e8f0;
+    --accent:     #38bdf8;
+    --accent-dim: #0c3a56;
+    --green:      #34d399;
+    --amber:      #fbbf24;
+    --red:        #f87171;
+    --teal:       #2dd4bf;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--body);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 72px 56px 64px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -80px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 28px; height: 1px;
+    background: var(--accent);
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    color: var(--primary);
+    line-height: 1.12;
+    margin-bottom: 16px;
+    max-width: 680px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-meta {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* ── LAYOUT ── */
+  .wrapper { max-width: 1100px; margin: 0 auto; padding: 0 56px; }
+
+  /* ── ZONE STRIP ── */
+  .zone-strip {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .zone-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .zone-pill {
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(56,189,248,0.2);
+    white-space: nowrap;
+  }
+
+  /* ── SECTIONS ── */
+  .section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+    line-height: 1.2;
+  }
+  .section-body {
+    color: var(--body);
+    max-width: 720px;
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  /* ── THREAT SCORES ── */
+  .threat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .threat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    transition: border-color 0.2s;
+  }
+  .threat-card:hover { border-color: var(--accent); }
+  .threat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .threat-name {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 15px;
+  }
+  .threat-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+  .threat-score-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--primary);
+  }
+  .threat-score-denom {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .threat-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    margin: 12px 0 14px;
+    overflow: hidden;
+  }
+  .threat-bar-fill { height: 100%; border-radius: 4px; }
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge-high   { background: rgba(248,113,113,0.12); color: #fca5a5; border: 1px solid rgba(248,113,113,0.25); }
+  .badge-medium { background: rgba(251,191,36,0.12);  color: #fde68a; border: 1px solid rgba(251,191,36,0.25); }
+  .badge-low    { background: rgba(52,211,153,0.12);  color: #6ee7b7; border: 1px solid rgba(52,211,153,0.25); }
+
+  /* ── TABLES ── */
+  .table-wrap { overflow-x: auto; margin-top: 8px; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--raised);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 14px 18px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--raised); }
+  tbody td {
+    padding: 13px 18px;
+    font-size: 13.5px;
+    color: var(--body);
+    vertical-align: middle;
+  }
+  tbody td:first-child { color: var(--primary); font-weight: 500; }
+  .hl { color: var(--accent) !important; font-weight: 600 !important; }
+
+  /* feature symbols */
+  .sym-yes  { color: var(--green); font-size: 16px; }
+  .sym-no   { color: var(--muted); font-size: 16px; }
+  .sym-part { color: var(--amber); font-size: 16px; }
+
+  /* ── MESSAGING CARDS ── */
+  .msg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .msg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg-card-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--primary);
+  }
+  .msg-card-headline {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    color: var(--accent);
+    line-height: 1.3;
+  }
+  .msg-card-body {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── GAPS TABLE ── */
+  .gap-row td:nth-child(2) { color: var(--teal); }
+
+  /* ── RECOMMENDATIONS ── */
+  .rec-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+  .rec-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+    align-items: start;
+    transition: border-color 0.2s;
+  }
+  .rec-item:hover { border-color: var(--accent); }
+  .rec-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--border);
+    line-height: 1;
+  }
+  .rec-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .rec-body { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 32px 56px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend { display: flex; gap: 18px; }
+  .legend span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 700px) {
+    .hero, .wrapper, .zone-strip, .footer { padding-left: 20px; padding-right: 20px; }
+    .hero { padding-top: 48px; padding-bottom: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Competitive Intelligence · Pune Region</div>
+  <h1>Who's washing <em>Pune's</em><br>clothes — and how.</h1>
+  <div class="hero-meta">
+    <span>📅 30 June 2026</span>
+    <span>🏢 5 Competitors Mapped</span>
+    <span>📍 10 Zones Covered</span>
+    <span>🔒 Confidential</span>
+  </div>
+</header>
+
+<!-- ZONE STRIP -->
+<div class="zone-strip">
+  <span class="zone-label">Service zones</span>
+  <span class="zone-pill">Koregaon Park</span>
+  <span class="zone-pill">Baner</span>
+  <span class="zone-pill">Hinjewadi</span>
+  <span class="zone-pill">Kothrud</span>
+  <span class="zone-pill">Viman Nagar</span>
+  <span class="zone-pill">Wakad</span>
+  <span class="zone-pill">Hadapsar</span>
+  <span class="zone-pill">Shivajinagar</span>
+  <span class="zone-pill">Aundh</span>
+  <span class="zone-pill">Pune Camp</span>
+</div>
+
+<div class="wrapper">
+
+  <!-- EXECUTIVE SUMMARY -->
+  <div class="section reveal">
+    <div class="section-label">Overview</div>
+    <div class="section-title">Executive Summary</div>
+    <p class="section-body">
+      PuneLaundry enters a fragmented market where UClean leads on brand familiarity and Laundry Basket leads on app convenience — but neither owns speed or sustainability. Competitors cluster at ₹60–90/kg with standard 24–48h turnaround, leaving same-day and eco-friendly positioning wide open. The IT corridors of Hinjewadi and Wakad represent a high-value, underserved segment ripe for B2B contracts. PuneLaundry's strongest asymmetric bet: be the only name in Pune that means <em>fast, trackable, and green</em>.
+    </p>
+  </div>
+
+  <!-- THREAT SCORES -->
+  <div class="section reveal">
+    <div class="section-label">Competitive Landscape</div>
+    <div class="section-title">Threat Assessment</div>
+    <div class="threat-grid">
+
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div>
+            <div class="threat-name">UClean Pune</div>
+            <div class="threat-note">Franchise chain · Multiple Pune outlets</div>
+          </div>
+          <div style="text-align:right">
+            <div class="threat-score-num">8.5</div>
+            <div class="threat-score-denom">/ 10</div>
+          </div>
+        </div>
+        <div class="threat-bar-track"><div class="threat-bar-fill" style="width:85%;background:#ef4444;"></div></div>
+        <span class="badge badge-high">High Threat</span>
+        <div class="threat-note" style="margin-top:10px;">Scale advantage, walk-in trust, national recognition.</div>
+      </div>
+
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div>
+            <div class="threat-name">Laundry Basket</div>
+            <div class="threat-note">App-first · Pickup & delivery</div>
+          </div>
+          <div style="text-align:right">
+            <div class="threat-score-num">8.0</div>
+            <div class="threat-score-denom">/ 10</div>
+          </div>
+        </div>
+        <div class="threat-bar-track"><div class="threat-bar-fill" style="width:80%;background:#f97316;"></div></div>
+        <span class="badge badge-high">High Threat</span>
+        <div class="threat-note" style="margin-top:10px;">Strong with working professionals, wide digital presence.</div>
+      </div>
+
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div>
+            <div class="threat-name">Mr. Fresh</div>
+            <div class="threat-note">Premium dry cleaning</div>
+          </div>
+          <div style="text-align:right">
+            <div class="threat-score-num">6.0</div>
+            <div class="threat-score-denom">/ 10</div>
+          </div>
+        </div>
+        <div class="threat-bar-track"><div class="threat-bar-fill" style="width:60%;background:#eab308;"></div></div>
+        <span class="badge badge-medium">Medium Threat</span>
+        <div class="threat-note" style="margin-top:10px;">Owns the premium segment; pricing too high for mass market.</div>
+      </div>
+
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div>
+            <div class="threat-name">Washmart</div>
+            <div class="threat-note">Budget laundry service</div>
+          </div>
+          <div style="text-align:right">
+            <div class="threat-score-num">5.5</div>
+            <div class="threat-score-denom">/ 10</div>
+          </div>
+        </div>
+        <div class="threat-bar-track"><div class="threat-bar-fill" style="width:55%;background:#eab308;"></div></div>
+        <span class="badge badge-medium">Medium Threat</span>
+        <div class="threat-note" style="margin-top:10px;">Price-sensitive segment, no app, limited digital reach.</div>
+      </div>
+
+      <div class="threat-card">
+        <div class="threat-card-header">
+          <div>
+            <div class="threat-name">Fabcure</div>
+            <div class="threat-note">Fabric care startup</div>
+          </div>
+          <div style="text-align:right">
+            <div class="threat-score-num">3.0</div>
+            <div class="threat-score-denom">/ 10</div>
+          </div>
+        </div>
+        <div class="threat-bar-track"><div class="threat-bar-fill" style="width:30%;background:#34d399;"></div></div>
+        <span class="badge badge-low">Low Threat</span>
+        <div class="threat-note" style="margin-top:10px;">Early-stage, limited Pune coverage, niche positioning.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="section reveal">
+    <div class="section-label">Market Rates</div>
+    <div class="section-title">Pricing Comparison</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>PuneLaundry</th>
+            <th>UClean</th>
+            <th>Laundry Basket</th>
+            <th>Washmart</th>
+            <th>Mr. Fresh</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Wash & Fold</td><td class="hl">₹60/kg</td><td>₹70/kg</td><td>₹65/kg</td><td>₹50/kg</td><td>₹90/kg</td></tr>
+          <tr><td>Dry Cleaning (shirt)</td><td class="hl">₹80/piece</td><td>₹100/piece</td><td>₹90/piece</td><td>₹75/piece</td><td>₹120/piece</td></tr>
+          <tr><td>Ironing Only</td><td class="hl">₹12/piece</td><td>₹15/piece</td><td>₹14/piece</td><td>₹10/piece</td><td>₹20/piece</td></tr>
+          <tr><td>Monthly Subscription</td><td class="hl">₹999/mo</td><td>₹1,199/mo</td><td>₹1,099/mo</td><td>₹799/mo</td><td>₹1,499/mo</td></tr>
+          <tr><td>Free Delivery Threshold</td><td class="hl">Above ₹299</td><td>Above ₹400</td><td>Above ₹350</td><td>₹49 flat fee</td><td>Above ₹500</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FEATURE MATRIX -->
+  <div class="section reveal">
+    <div class="section-label">Capability Map</div>
+    <div class="section-title">Feature Matrix</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>PuneLaundry</th>
+            <th>UClean</th>
+            <th>Laundry Basket</th>
+            <th>Washmart</th>
+            <th>Mr. Fresh</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Doorstep Pickup & Delivery</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td></tr>
+          <tr><td>Same-Day Express</td><td class="sym-yes">✦</td><td class="sym-no">–</td><td class="sym-part">◑</td><td class="sym-no">–</td><td class="sym-part">◑</td></tr>
+          <tr><td>Mobile App Booking</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-no">–</td><td class="sym-no">–</td></tr>
+          <tr><td>Live Order Tracking</td><td class="sym-yes">✦</td><td class="sym-no">–</td><td class="sym-yes">✦</td><td class="sym-no">–</td><td class="sym-no">–</td></tr>
+          <tr><td>Eco-Friendly Wash</td><td class="sym-yes">✦</td><td class="sym-no">–</td><td class="sym-no">–</td><td class="sym-no">–</td><td class="sym-part">◑</td></tr>
+          <tr><td>Subscription Plans</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td></tr>
+          <tr><td>Dry Cleaning</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-part">◑</td><td class="sym-yes">✦</td></tr>
+          <tr><td>Shoe & Bag Care</td><td class="sym-yes">✦</td><td class="sym-part">◑</td><td class="sym-no">–</td><td class="sym-no">–</td><td class="sym-yes">✦</td></tr>
+          <tr><td>GST Invoice</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-no">–</td><td class="sym-no">–</td><td class="sym-yes">✦</td></tr>
+          <tr><td>Transparent Per-kg Pricing</td><td class="sym-yes">✦</td><td class="sym-yes">✦</td><td class="sym-part">◑</td><td class="sym-yes">✦</td><td class="sym-no">–</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MESSAGING -->
+  <div class="section reveal">
+    <div class="section-label">Brand Voice</div>
+    <div class="section-title">Competitor Messaging</div>
+    <div class="msg-grid">
+      <div class="msg-card">
+        <div class="msg-card-name">UClean Pune</div>
+        <div class="msg-card-headline">"India's Largest Laundry Chain"</div>
+        <div class="msg-card-body">Leads with scale and franchise credibility. Appeals to customers who want offline familiarity alongside digital convenience.</div>
+      </div>
+      <div class="msg-card">
+        <div class="msg-card-name">Laundry Basket</div>
+        <div class="msg-card-headline">"Laundry at Your Doorstep"</div>
+        <div class="msg-card-body">App-first, convenience-driven. Strong on social media targeting IT professionals in Baner and Viman Nagar.</div>
+      </div>
+      <div class="msg-card">
+        <div class="msg-card-name">Washmart</div>
+        <div class="msg-card-headline">"Clean Clothes, Honest Prices"</div>
+        <div class="msg-card-body">Pure value play. Minimal digital footprint, relies on word-of-mouth referrals from price-conscious households.</div>
+      </div>
+      <div class="msg-card">
+        <div class="msg-card-name">Mr. Fresh</div>
+        <div class="msg-card-headline">"Premium Care for Premium Clothes"</div>
+        <div class="msg-card-body">Luxury positioning for formal and designer wear. Targets affluent households in Koregaon Park and Pune Camp.</div>
+      </div>
+      <div class="msg-card">
+        <div class="msg-card-name">Fabcure</div>
+        <div class="msg-card-headline">"Fabric First, Always"</div>
+        <div class="msg-card-body">Niche fabric-health angle. Early stage, limited zone coverage — not yet a significant competitive force in Pune.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAPS -->
+  <div class="section reveal">
+    <div class="section-label">Where the market is open</div>
+    <div class="section-title">Gaps & Opportunities</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gap in the Market</th><th>Opportunity for PuneLaundry</th></tr></thead>
+        <tbody class="gap-row">
+          <tr><td>No brand combines same-day speed with eco credentials</td><td>Position "GreenExpress" as Pune's first fast + sustainable wash</td></tr>
+          <tr><td>Laundry Basket has no live order tracking</td><td>Make real-time tracking a headline feature in onboarding</td></tr>
+          <tr><td>IT corridors (Hinjewadi, Wakad) are underserved</td><td>Launch B2B corporate monthly plans for offices and co-living spaces</td></tr>
+          <tr><td>Washmart has no app — digital gap in budget segment</td><td>Win price-sensitive users with app convenience + loyalty points</td></tr>
+          <tr><td>No competitor offers shoe & bag care at scale</td><td>Bundle shoe cleaning as a premium add-on to grow order value</td></tr>
+          <tr><td>Mr. Fresh is priced out of the mid-market</td><td>Undercut by 20% to capture formal-wear customers who can't justify ₹120/piece</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <div class="section reveal">
+    <div class="section-label">What to do next</div>
+    <div class="section-title">Top 3 Recommendations</div>
+    <div class="rec-list">
+      <div class="rec-item">
+        <div class="rec-num">1</div>
+        <div>
+          <div class="rec-title">Launch PuneExpress — a same-day guarantee no one else offers</div>
+          <div class="rec-body">No competitor reliably delivers same-day across Pune zones. Make this the flagship offer, promoted specifically in Baner, Hinjewadi, and Viman Nagar where working professionals have highest willingness to pay for speed.</div>
+        </div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-num">2</div>
+        <div>
+          <div class="rec-title">Sign B2B contracts with IT offices and co-living operators in the tech belt</div>
+          <div class="rec-body">Hinjewadi and Wakad house tens of thousands of IT employees — high income, no time. Bulk monthly contracts with offices, hostels, and co-living spaces lock in recurring revenue and are a distribution channel competitors haven't tapped.</div>
+        </div>
+      </div>
+      <div class="rec-item">
+        <div class="rec-num">3</div>
+        <div>
+          <div class="rec-title">Own the sustainability angle before anyone else claims it</div>
+          <div class="rec-body">UClean and Laundry Basket have zero eco-friendly messaging. A "GreenWash" badge — eco detergents, water efficiency, biodegradable packaging — paired with a loyalty points program creates a defensible identity that the premium-yet-conscious segment in Koregaon Park and Aundh will respond to.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>PuneLaundry Market Intelligence · Pune Region · 30-06-2026 · Confidential</p>
+  <div class="legend">
+    <span><span class="sym-yes" style="font-size:13px;">✦</span> Available</span>
+    <span><span class="sym-part" style="font-size:13px;">◑</span> Partial</span>
+    <span><span class="sym-no" style="font-size:13px;">–</span> Not available</span>
+  </div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
