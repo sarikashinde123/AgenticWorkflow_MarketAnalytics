@@ -66,6 +66,8 @@ def run_pipeline(self, run_id: str, input_data: dict):
         business_type     = input_data["business_type"]
         location          = input_data["location"]
         search_radius_km  = input_data["search_radius_km"]
+        mode              = input_data.get("mode", "market_overview")
+        own_offerings     = input_data.get("own_offerings")
 
         # ── Agent 0 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 0, "agent_label": AGENTS_META[0]["label"]})
@@ -98,7 +100,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
 
         def tok3(t): _pub(run_id, "agent_token", {"agent_id": 3, "data": t})
 
-        analysis = agent3_analyst.run(input_schema, raw_data, on_token=tok3)
+        analysis = agent3_analyst.run(input_schema, raw_data, mode=mode, own_offerings=own_offerings, on_token=tok3)
         _pub(run_id, "agent_done", {"agent_id": 3, "data": analysis.get("executive_summary", "")[:200]})
 
         # ── Agent 4 ──────────────────────────────────────────────
@@ -110,7 +112,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
             html_chunks.append(t)
             _pub(run_id, "agent_token", {"agent_id": 4, "data": t})
 
-        agent4_report.run(input_schema, analysis, on_chunk=tok4)
+        agent4_report.run(input_schema, analysis, mode=mode, on_chunk=tok4)
         report_html = "".join(html_chunks)
 
         _pub(run_id, "agent_done", {"agent_id": 4, "data": f"Report generated ({len(report_html):,} chars)"})

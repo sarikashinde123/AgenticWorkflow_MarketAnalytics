@@ -36,6 +36,8 @@ interface PipelineStore {
     business_type: string
     location: string
     search_radius_km: number
+    mode?: 'market_overview' | 'gap_analysis'
+    own_offerings?: string
   }) => Promise<void>
   reset: () => void
 }

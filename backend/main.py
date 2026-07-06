@@ -13,8 +13,9 @@ import uuid
 from datetime import datetime
 from typing import AsyncGenerator
 
+import io
 import os
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -47,6 +48,35 @@ def startup():
 
 # Serve generated PDF files
 app.mount("/reports", StaticFiles(directory=settings.reports_dir), name="reports")
+
+
+# ── Extract offerings from an uploaded PDF (Gap Analysis mode) ──
+@app.post("/api/offerings/extract")
+async def extract_offerings(file: UploadFile = File(...)):
+    """Read the user's own-offerings PDF and return its text for gap analysis."""
+    name = (file.filename or "").lower()
+    if not name.endswith(".pdf") and file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Please upload a PDF file.")
+
+    data = await file.read()
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="PDF is too large (max 10 MB).")
+
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(data))
+        text = "\n".join((page.extract_text() or "") for page in reader.pages).strip()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Could not read the PDF: {exc}")
+
+    if not text:
+        raise HTTPException(
+            status_code=400,
+            detail="No readable text found — the PDF looks scanned or image-only.",
+        )
+
+    return {"text": text[:20000], "chars": len(text), "pages": len(reader.pages),
+            "filename": file.filename}
 
 
 # ── Start pipeline ─────────────────────────────────────────────

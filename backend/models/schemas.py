@@ -19,12 +19,20 @@ class AgentStatus(str, Enum):
     failed = "failed"
 
 
+class PipelineMode(str, Enum):
+    market_overview = "market_overview"   # new business — survey competitor offerings
+    gap_analysis = "gap_analysis"          # existing business — compare own offerings vs market
+
+
 # ── Input ──────────────────────────────────────────────────────
 class PipelineInput(BaseModel):
     business_name: str = Field(..., min_length=2, max_length=100)
     business_type: str = Field(..., min_length=2, max_length=100)
     location: str = Field(..., min_length=2, max_length=200)
     search_radius_km: int = Field(default=5, ge=1, le=50)
+    mode: PipelineMode = PipelineMode.market_overview
+    # In gap_analysis mode, the user's own offerings (extracted from their PDF).
+    own_offerings: Optional[str] = Field(default=None, max_length=20000)
 
 
 # ── Business / Competitor schema ───────────────────────────────
