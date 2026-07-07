@@ -1,0 +1,83 @@
+# Render Blueprint — provisions the whole stack from this repo.
+# In Render: New → Blueprint → connect this repo → Apply.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# NOTE: the Celery worker is a Background Worker, which is NOT on Render's free
+# tier (starter ~$7/mo). Everything else can run on free plans (with cold starts).
+
+databases:
+  - name: compintel-db
+    databaseName: compintel
+    user: compintel
+    plan: free
+    region: singapore
+
+services:
+  # ── Redis (Key Value) — Celery broker + SSE pub/sub ──
+  - type: redis
+    name: compintel-redis
+    plan: free
+    region: singapore
+    ipAllowList: []            # internal connections only
+    maxmemoryPolicy: noeviction # don't drop queued Celery tasks
+
+  # ── Backend API ──
+  - type: web
+    name: compintel-api
+    runtime: docker
+    rootDir: backend
+    dockerCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    region: singapore
+    branch: Prod
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false            # set your secret in the dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: compintel-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: compintel-redis
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        sync: false            # set to the frontend URL after first deploy
+
+  # ── Celery worker (Background Worker — paid plan required) ──
+  - type: worker
+    name: compintel-worker
+    runtime: docker
+    rootDir: backend
+    dockerCommand: celery -A tasks.celery_app worker --loglevel=info
+    plan: starter
+    region: singapore
+    branch: Prod
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: compintel-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: compintel-redis
+          property: connectionString
+
+  # ── Frontend (Next.js) ──
+  - type: web
+    name: compintel-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npx next start -p $PORT
+    plan: free
+    region: singapore
+    branch: Prod
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false            # set to the API service URL, then redeploy

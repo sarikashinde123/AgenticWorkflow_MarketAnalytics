@@ -31,9 +31,12 @@ from tasks.pipeline_task import run_pipeline
 
 app = FastAPI(title="Competitor Intel API", version="1.0.0")
 
+# Allowed browser origins. Comma-separated env var in production
+# (e.g. ALLOWED_ORIGINS="https://myapp.up.railway.app"); defaults to localhost.
+_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[o.strip() for o in _origins.split(",") if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )

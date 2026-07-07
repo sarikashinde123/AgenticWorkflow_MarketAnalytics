@@ -1,0 +1,51 @@
+name: CI
+
+# Quality gate on every push / PR to the two deploy branches.
+# Deployment (CD) is handled by Railway's native GitHub integration.
+on:
+  push:
+    branches: [main, Prod]
+  pull_request:
+    branches: [main, Prod]
+
+jobs:
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+
+  backend:
+    name: Backend check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      # Syntax check everything, then an import smoke test of the app.
+      - run: python -m compileall -q .
+      - run: python -c "import main; print('backend imports OK')"
+        env:
+          ANTHROPIC_API_KEY: dummy-key-for-ci
+          ALLOWED_ORIGINS: http://localhost:3000
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          REDIS_URL: redis://localhost:6379/0
