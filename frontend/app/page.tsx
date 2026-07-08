@@ -21,6 +21,12 @@ export default function Home() {
               <div className="eyebrow" style={{ fontSize: '.55rem', letterSpacing: '.32em' }}>Competitive intelligence</div>
             </div>
           </div>
+
+          {/* small heading */}
+          <h1 className="hidden md:block font-display text-[var(--bone)] text-base tracking-tight text-center flex-1">
+            Command your local market
+          </h1>
+
           <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--dim)]">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[var(--confirm)]" style={{ boxShadow: '0 0 6px var(--confirm)' }} />
             <span className="hidden sm:inline">SYSTEM</span> ONLINE
@@ -28,21 +34,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero — thesis */}
-      <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 animate-in text-center">
-        <p className="eyebrow mb-4">Field reconnaissance · powered by Claude</p>
-        <h1 className="font-display text-[var(--bone)] leading-[1.06] tracking-tight text-3xl sm:text-4xl md:text-5xl mx-auto max-w-2xl text-balance"
-            style={{ fontWeight: 500 }}>
-          Command your local market.
-        </h1>
-        <p className="mt-4 text-[var(--dim)] max-w-lg mx-auto text-[15px] leading-relaxed">
-          Five agents map the competitors around you, size up their footprint, and
-          hand you a strategic dossier — one run, no analysts required.
-        </p>
-      </section>
-
       {/* Operations grid */}
-      <section className="mx-auto max-w-6xl px-5 pb-24">
+      <section className="mx-auto max-w-6xl px-5 pt-8 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
           <div className="lg:col-span-2 lg:sticky lg:top-20">
             <PipelineForm />

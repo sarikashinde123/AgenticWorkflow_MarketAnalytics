@@ -46,7 +46,7 @@ Return ONLY the JSON — no markdown, no explanation.
 """
 
 
-def _scrape_one(competitor: dict, on_token=None) -> dict:
+def _scrape_one(competitor: dict, on_token=None, on_usage=None) -> dict:
     name = competitor.get("competitor_name", "Unknown")
     website = competitor.get("website", "")
     queries = competitor.get("search_queries", [f"{name} pricing services reviews"])
@@ -70,6 +70,8 @@ def _scrape_one(competitor: dict, on_token=None) -> dict:
             tools=[WEB_SEARCH_TOOL],
             messages=messages,
         )
+        if on_usage:
+            on_usage(response.usage)
 
         for block in response.content:
             if hasattr(block, "text"):
@@ -110,7 +112,7 @@ def _scrape_one(competitor: dict, on_token=None) -> dict:
         }
 
 
-def run(scraper_scripts: list[dict], on_token=None) -> list[dict]:
+def run(scraper_scripts: list[dict], on_token=None, on_usage=None) -> list[dict]:
     """
     Runs Agent 2 for each competitor in scraper_scripts.
     Returns a list of raw competitor data dicts.
@@ -120,6 +122,6 @@ def run(scraper_scripts: list[dict], on_token=None) -> list[dict]:
         name = script.get("competitor_name", "?")
         if on_token:
             on_token(f"\n[Scraping {name}...]\n")
-        data = _scrape_one(script, on_token=on_token)
+        data = _scrape_one(script, on_token=on_token, on_usage=on_usage)
         results.append(data)
     return results

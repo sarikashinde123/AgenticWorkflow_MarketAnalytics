@@ -53,10 +53,11 @@ Return ONLY the JSON — no markdown fences, no explanation.
 
 
 def run(business_name: str, business_type: str, location: str,
-        search_radius_km: int, on_token=None) -> dict:
+        search_radius_km: int, on_token=None, on_usage=None) -> dict:
     """
     Runs Agent 0 and returns the input_schema dict.
     on_token(text) is called for each streamed token if provided.
+    on_usage(response.usage) is called after each API call for token accounting.
     """
     prompt = (
         f"Business name: {business_name}\n"
@@ -79,6 +80,8 @@ def run(business_name: str, business_type: str, location: str,
             tools=[WEB_SEARCH_TOOL],
             messages=messages,
         )
+        if on_usage:
+            on_usage(response.usage)
 
         # Collect text from this response turn
         for block in response.content:

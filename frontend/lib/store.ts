@@ -9,18 +9,21 @@ export interface AgentState {
   model: string
   status: AgentStatus
   tokens: string
+  tokensIn: number
+  tokensOut: number
+  activity: string   // human-readable "what it's doing"
 }
 
-const AGENTS: Omit<AgentState, 'status' | 'tokens'>[] = [
-  { id: 0, label: 'Agent 0 — Business Discovery',  model: 'claude-sonnet-4-6' },
-  { id: 1, label: 'Agent 1 — Scraper Generator',   model: 'claude-opus-4-8' },
-  { id: 2, label: 'Agent 2 — Website Scraper',     model: 'claude-haiku-4-5-20251001' },
-  { id: 3, label: 'Agent 3 — Deep Analyst',        model: 'claude-opus-4-8 + Extended Thinking' },
-  { id: 4, label: 'Agent 4 — Report Writer',       model: 'claude-opus-4-8 + Streaming' },
+const AGENTS: Omit<AgentState, 'status' | 'tokens' | 'tokensIn' | 'tokensOut'>[] = [
+  { id: 0, label: 'Agent 0 — Business Discovery',  model: 'claude-sonnet-4-6',              activity: 'Searching the web for local competitors' },
+  { id: 1, label: 'Agent 1 — Scraper Generator',   model: 'claude-opus-4-8',                activity: 'Planning what to research per competitor' },
+  { id: 2, label: 'Agent 2 — Website Scraper',     model: 'claude-haiku-4-5-20251001',      activity: 'Gathering competitor data via web search' },
+  { id: 3, label: 'Agent 3 — Deep Analyst',        model: 'claude-opus-4-8 + Extended Thinking', activity: 'Analysing pricing, features, reviews & gaps' },
+  { id: 4, label: 'Agent 4 — Report Writer',       model: 'claude-opus-4-8 + Streaming',    activity: 'Writing the intelligence dossier' },
 ]
 
 function freshAgents(): AgentState[] {
-  return AGENTS.map(a => ({ ...a, status: 'pending', tokens: '' }))
+  return AGENTS.map(a => ({ ...a, status: 'pending', tokens: '', tokensIn: 0, tokensOut: 0 }))
 }
 
 interface PipelineStore {
@@ -85,6 +88,15 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
       set(s => ({
         agents: s.agents.map(a =>
           a.id === d.agent_id ? { ...a, tokens: a.tokens + (d.data ?? '') } : a
+        )
+      }))
+    })
+
+    es.addEventListener('agent_usage', (e) => {
+      const d = JSON.parse(e.data)
+      set(s => ({
+        agents: s.agents.map(a =>
+          a.id === d.agent_id ? { ...a, tokensIn: d.input_tokens, tokensOut: d.output_tokens } : a
         )
       }))
     })

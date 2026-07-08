@@ -69,13 +69,34 @@ def run_pipeline(self, run_id: str, input_data: dict):
         mode              = input_data.get("mode", "market_overview")
         own_offerings     = input_data.get("own_offerings")
 
+        # ── Token accounting ──────────────────────────────────────
+        agent_usage = {i: {"input": 0, "output": 0} for i in range(5)}
+        totals = {"input": 0, "output": 0}
+
+        def _usage_cb(agent_id):
+            def cb(usage):
+                i = getattr(usage, "input_tokens", 0) or 0
+                o = getattr(usage, "output_tokens", 0) or 0
+                agent_usage[agent_id]["input"] += i
+                agent_usage[agent_id]["output"] += o
+                totals["input"] += i
+                totals["output"] += o
+                _pub(run_id, "agent_usage", {
+                    "agent_id": agent_id,
+                    "input_tokens": agent_usage[agent_id]["input"],
+                    "output_tokens": agent_usage[agent_id]["output"],
+                    "total_input": totals["input"],
+                    "total_output": totals["output"],
+                })
+            return cb
+
         # ── Agent 0 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 0, "agent_label": AGENTS_META[0]["label"]})
 
         def tok0(t): _pub(run_id, "agent_token", {"agent_id": 0, "data": t})
 
         input_schema = agent0_discovery.run(
-            business_name, business_type, location, search_radius_km, on_token=tok0
+            business_name, business_type, location, search_radius_km, on_token=tok0, on_usage=_usage_cb(0)
         )
         _pub(run_id, "agent_done", {"agent_id": 0, "data": json.dumps(input_schema)[:200]})
 
@@ -84,7 +105,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
 
         def tok1(t): _pub(run_id, "agent_token", {"agent_id": 1, "data": t})
 
-        scraper_scripts = agent1_scraper_gen.run(input_schema, on_token=tok1)
+        scraper_scripts = agent1_scraper_gen.run(input_schema, on_token=tok1, on_usage=_usage_cb(1))
         _pub(run_id, "agent_done", {"agent_id": 1, "data": f"{len(scraper_scripts)} scripts generated"})
 
         # ── Agent 2 ──────────────────────────────────────────────
@@ -92,7 +113,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
 
         def tok2(t): _pub(run_id, "agent_token", {"agent_id": 2, "data": t})
 
-        raw_data = agent2_scraper.run(scraper_scripts, on_token=tok2)
+        raw_data = agent2_scraper.run(scraper_scripts, on_token=tok2, on_usage=_usage_cb(2))
         _pub(run_id, "agent_done", {"agent_id": 2, "data": f"{len(raw_data)} competitors scraped"})
 
         # ── Agent 3 ──────────────────────────────────────────────
@@ -100,7 +121,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
 
         def tok3(t): _pub(run_id, "agent_token", {"agent_id": 3, "data": t})
 
-        analysis = agent3_analyst.run(input_schema, raw_data, mode=mode, own_offerings=own_offerings, on_token=tok3)
+        analysis = agent3_analyst.run(input_schema, raw_data, mode=mode, own_offerings=own_offerings, on_token=tok3, on_usage=_usage_cb(3))
         _pub(run_id, "agent_done", {"agent_id": 3, "data": analysis.get("executive_summary", "")[:200]})
 
         # ── Agent 4 ──────────────────────────────────────────────
@@ -112,7 +133,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
             html_chunks.append(t)
             _pub(run_id, "agent_token", {"agent_id": 4, "data": t})
 
-        agent4_report.run(input_schema, analysis, mode=mode, on_chunk=tok4)
+        agent4_report.run(input_schema, analysis, mode=mode, on_chunk=tok4, on_usage=_usage_cb(4))
         report_html = "".join(html_chunks)
 
         _pub(run_id, "agent_done", {"agent_id": 4, "data": f"Report generated ({len(report_html):,} chars)"})
@@ -128,7 +149,11 @@ def run_pipeline(self, run_id: str, input_data: dict):
             pdf_url=pdf_url,
             completed_at=datetime.utcnow(),
         )
-        _pub(run_id, "pipeline_done", {"run_id": run_id, "pdf_url": pdf_url})
+        _pub(run_id, "pipeline_done", {
+            "run_id": run_id, "pdf_url": pdf_url,
+            "total_input": totals["input"], "total_output": totals["output"],
+            "total_tokens": totals["input"] + totals["output"],
+        })
 
     except Exception as exc:
         _update_db(run_id, status="failed", error=str(exc))

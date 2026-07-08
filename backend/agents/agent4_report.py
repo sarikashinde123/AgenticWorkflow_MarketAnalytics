@@ -75,7 +75,7 @@ Real data only — zero placeholders.
 """
 
 
-def run(input_schema: dict, analysis: dict, mode: str = "market_overview", on_chunk=None) -> str:
+def run(input_schema: dict, analysis: dict, mode: str = "market_overview", on_chunk=None, on_usage=None) -> str:
     """
     Runs Agent 4 with streaming.
     on_chunk(text) is called for each streamed token.
@@ -103,5 +103,7 @@ def run(input_schema: dict, analysis: dict, mode: str = "market_overview", on_ch
             full_html += text
             if on_chunk:
                 on_chunk(text)
+        if on_usage:
+            on_usage(stream.get_final_message().usage)
 
     return full_html

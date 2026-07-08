@@ -100,7 +100,7 @@ Ground every gap in real competitor data and our real offerings. Return ONLY the
 
 
 def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
-        own_offerings: str | None = None, on_token=None) -> dict:
+        own_offerings: str | None = None, on_token=None, on_usage=None) -> dict:
     """
     Runs Agent 3 with adaptive thinking and returns the analysis dict.
     In gap_analysis mode it also folds in the user's own offerings.
@@ -133,6 +133,8 @@ def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
         system=system,
         messages=[{"role": "user", "content": prompt}],
     )
+    if on_usage:
+        on_usage(response.usage)
 
     full_text = ""
     for block in response.content:

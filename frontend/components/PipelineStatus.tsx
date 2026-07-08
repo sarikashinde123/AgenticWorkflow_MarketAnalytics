@@ -28,13 +28,16 @@ const CHIP_TEXT: Record<AgentState['status'], string> = {
   pending: 'standby', running: 'scanning', done: 'confirmed', failed: 'lost',
 }
 
+const fmt = (n: number) => n.toLocaleString()
+
 function Unit({ agent, last }: { agent: AgentState; last: boolean }) {
   const active = agent.status === 'running'
+  const hasTokens = agent.tokensIn > 0 || agent.tokensOut > 0
   return (
-    <div className="relative flex gap-4 pb-5 last:pb-0">
+    <div className="relative flex gap-4 pb-3 last:pb-0">
       {!last && <span className="absolute left-4 top-9 bottom-0 w-px bg-gradient-to-b from-[var(--line-2)] to-transparent" />}
       <Node status={agent.status} />
-      <div className={`flex-1 min-w-0 rounded-lg border p-3.5 transition-colors ${
+      <div className={`flex-1 min-w-0 rounded-lg border p-3 transition-colors ${
         active ? 'border-[rgba(245,165,36,.28)] bg-[rgba(245,165,36,.05)]' : 'border-[var(--line)] bg-[rgba(255,255,255,.015)]'
       }`}>
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -43,14 +46,29 @@ function Unit({ agent, last }: { agent: AgentState; last: boolean }) {
             <span className="text-sm text-[var(--bone)] truncate">{agent.label.replace(/^Agent \d+\s*[—-]\s*/, '')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] text-[var(--mute)] hidden sm:inline">{agent.model}</span>
+            {hasTokens && (
+              <span className="font-mono text-[10px] text-[var(--dim)]" title="tokens: input / output">
+                ↑{fmt(agent.tokensIn)} <span className="text-[var(--mute)]">·</span> ↓{fmt(agent.tokensOut)} tok
+              </span>
+            )}
             <span className={`chip border ${CHIP[agent.status]}`}>{CHIP_TEXT[agent.status]}</span>
           </div>
         </div>
-        {agent.tokens && (
-          <pre className="mt-2.5 text-[11px] leading-relaxed text-[var(--dim)] font-mono bg-black/40 rounded-md p-2.5
-                          max-h-28 overflow-y-auto whitespace-pre-wrap break-words border border-[var(--line)]">
-            {agent.tokens.slice(-500)}{active && <span className="caret">&nbsp;</span>}
+
+        {/* live commentary while this agent runs */}
+        {active && (
+          <div className="mt-2 flex items-center gap-2 font-mono text-[11px] text-[var(--signal)]">
+            <span className="blink">▸</span>{agent.activity}<span className="caret">&nbsp;</span>
+          </div>
+        )}
+        {!active && (
+          <div className="mt-1 font-mono text-[10px] text-[var(--mute)] truncate">{agent.model}</div>
+        )}
+
+        {active && agent.tokens && (
+          <pre className="mt-2 text-[11px] leading-relaxed text-[var(--dim)] font-mono bg-black/40 rounded-md p-2.5
+                          max-h-20 overflow-y-auto whitespace-pre-wrap break-words border border-[var(--line)]">
+            {agent.tokens.slice(-300)}<span className="caret">&nbsp;</span>
           </pre>
         )}
       </div>
@@ -64,6 +82,8 @@ export default function PipelineStatus() {
   const done = agents.filter(a => a.status === 'done').length
   const pct = Math.round((done / total) * 100)
   const idle = status === 'idle'
+  const totalTokens = agents.reduce((s, a) => s + a.tokensIn + a.tokensOut, 0)
+  const running = agents.find(a => a.status === 'running')
 
   return (
     <div className="panel rounded-xl p-6 animate-in">
@@ -85,7 +105,9 @@ export default function PipelineStatus() {
         <>
           <div className="flex items-center justify-between font-mono text-[11px] text-[var(--mute)] mb-1.5">
             <span>{done} / {total} units confirmed</span>
-            <span className="text-[var(--dim)]">{status === 'completed' ? '100%' : `${pct}%`}</span>
+            <span className="text-[var(--dim)]">
+              {totalTokens > 0 && <>{fmt(totalTokens)} tokens · </>}{status === 'completed' ? '100%' : `${pct}%`}
+            </span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden mb-4">
             <div className={`h-full rounded-full transition-all duration-500 ${
@@ -99,8 +121,8 @@ export default function PipelineStatus() {
             status === 'completed' ? 'bg-[rgba(55,208,166,.08)] text-[var(--confirm)] border-[rgba(55,208,166,.2)]' :
             status === 'failed'    ? 'bg-[rgba(242,84,45,.08)] text-[var(--alert)] border-[rgba(242,84,45,.2)]' :
             'bg-[rgba(245,165,36,.08)] text-[var(--signal)] border-[rgba(245,165,36,.2)]'}`}>
-            {status === 'running' && <><span className="blink">▸</span> Scanning your area of operations…</>}
-            {status === 'completed' && <>✓ Recon complete — dossier ready below.</>}
+            {status === 'running' && <><span className="blink">▸</span> {running ? `${running.activity}…` : 'Scanning your area of operations…'}</>}
+            {status === 'completed' && <>✓ Recon complete — dossier ready.</>}
             {status === 'failed' && <>✗ {error || 'Recon failed'}</>}
           </div>
         </>

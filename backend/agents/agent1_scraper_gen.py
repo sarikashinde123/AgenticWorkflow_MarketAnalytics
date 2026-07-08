@@ -54,7 +54,7 @@ TOOLS = [
 ]
 
 
-def run(input_schema: dict, on_token=None) -> list[dict]:
+def run(input_schema: dict, on_token=None, on_usage=None) -> list[dict]:
     """
     Runs Agent 1 and returns a list of scraper instruction dicts.
     """
@@ -90,6 +90,8 @@ def run(input_schema: dict, on_token=None) -> list[dict]:
             tools=TOOLS,
             messages=messages,
         )
+        if on_usage:
+            on_usage(response.usage)
 
         for block in response.content:
             if hasattr(block, "text") and on_token:
