@@ -32,9 +32,12 @@ REQUIRED SECTIONS:
 4. Pricing Comparison — table with our advantage highlighted in green
 5. Feature Matrix — ✓ / ✗ grid
 6. Review Sentiment — star ratings + sentiment badges
-7. Gaps & Opportunities — highlighted cards
-8. Top 3 Recommendations — numbered, bold, actionable
-9. Footer — generated timestamp, confidential label
+7. Best Location to Start — a highlighted card showing the recommended area,
+   why it's ideal, demand signals as bullet points, and a list of areas to avoid
+   (with reasons). Use a map-pin icon or location emoji. Data is in best_location{}.
+8. Gaps & Opportunities — highlighted cards
+9. Top 3 Recommendations — numbered, bold, actionable
+10. Footer — generated timestamp, confidential label
 
 Do NOT include SEO Analysis or SWOT Analysis sections.
 
@@ -79,9 +82,12 @@ REQUIRED SECTIONS (in this order):
 7. Feature Matrix — grid with a "You" column beside each competitor; mark our ✗ gaps clearly
 8. Competitor Threat Scores — CSS bars, colour-coded
 9. Review Sentiment — star ratings + sentiment badges
-10. Quick Wins — low-effort, high-impact fixes (highlighted)
-11. Action Plan to Close the Gaps — the top 3 recommendations, numbered and specific
-12. Footer — generated timestamp, confidential label
+10. Best Location to Start / Expand — a highlighted card showing the recommended area,
+    why it's ideal, demand signals as bullet points, and areas to avoid (with reasons).
+    Use a map-pin icon or location emoji. Data is in best_location{}.
+11. Quick Wins — low-effort, high-impact fixes (highlighted)
+12. Action Plan to Close the Gaps — the top 3 recommendations, numbered and specific
+13. Footer — generated timestamp, confidential label
 
 COMPETITOR WEBSITE LINKS (MANDATORY):
 - In the Review Sentiment section and Competitor Threat Scores section, EVERY competitor

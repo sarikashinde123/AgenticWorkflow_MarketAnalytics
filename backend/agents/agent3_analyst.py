@@ -45,8 +45,23 @@ produce a deep competitive analysis JSON with these keys:
      "reasoning": "..."}
   ],
   "top_3_recommendations": ["...", "...", "..."],
-  "gaps_and_opportunities": ["...", "..."]
+  "gaps_and_opportunities": ["...", "..."],
+  "best_location": {
+    "recommended_area": "specific locality/neighbourhood name within the search radius",
+    "why": "2-3 sentence explanation of why this area is ideal",
+    "competitor_density": "low|medium|high — how many competitors already operate here",
+    "demand_signals": ["list of factors indicating strong customer demand in this area"],
+    "avoid_areas": [
+      {"area": "locality name", "reason": "why this area is a poor choice (e.g. oversaturated, low footfall)"}
+    ]
+  }
 }
+
+BEST LOCATION ANALYSIS: Based on where competitors are clustered (their addresses),
+identify the area within the search radius that has the LEAST competitor saturation
+but strong demand potential. Consider: residential density, commercial activity,
+proximity to complementary businesses, footfall, and accessibility.
+Flag areas to AVOID due to heavy competitor presence.
 
 Think deeply. Be specific. Use only real data from the raw input.
 Return ONLY the JSON.
@@ -90,8 +105,23 @@ OUR offerings against the market and produce a JSON that makes the gaps explicit
     "your_advantages":  [ "things WE already do better than the market" ]
   },
   "quick_wins": [ "low-effort, high-impact fixes to close gaps fast" ],
-  "top_3_recommendations": [ "prioritised actions to close the biggest gaps", "...", "..." ]
+  "top_3_recommendations": [ "prioritised actions to close the biggest gaps", "...", "..." ],
+  "best_location": {
+    "recommended_area": "specific locality/neighbourhood name within the search radius",
+    "why": "2-3 sentence explanation of why this area is ideal",
+    "competitor_density": "low|medium|high — how many competitors already operate here",
+    "demand_signals": ["list of factors indicating strong customer demand in this area"],
+    "avoid_areas": [
+      {"area": "locality name", "reason": "why this area is a poor choice (e.g. oversaturated, low footfall)"}
+    ]
+  }
 }
+
+BEST LOCATION ANALYSIS: Based on where competitors are clustered (their addresses),
+identify the area within the search radius that has the LEAST competitor saturation
+but strong demand potential. Consider: residential density, commercial activity,
+proximity to complementary businesses, footfall, and accessibility.
+Flag areas to AVOID due to heavy competitor presence.
 
 IMPORTANT: The feature_matrix MUST include a "You" column built from OUR offerings, alongside each
 competitor. The pricing_comparison MUST include a row for OUR business using OUR actual prices.
@@ -142,10 +172,22 @@ def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
     """
     business = input_schema.get("business", {})
 
+    location = input_schema.get("location", business.get("location", ""))
+    radius = input_schema.get("search_radius_km", 5)
+
+    location_context = (
+        f"\nSearch Area: {location} within {radius} km radius.\n"
+        f"Competitor Addresses (use these to identify clusters and gaps):\n"
+    )
+    for c in input_schema.get("competitors", []):
+        addr = c.get("address", "unknown")
+        location_context += f"  - {c.get('name', '?')}: {addr}\n"
+
     if mode == "gap_analysis":
         system = GAP_SYSTEM
         prompt = (
             f"Our Business:\n{json.dumps(business, indent=2)}\n\n"
+            f"{location_context}\n"
             f"OUR OWN OFFERINGS (from the owner's document):\n{(own_offerings or 'Not provided').strip()[:16000]}\n\n"
             f"Raw Competitor Data:\n{json.dumps(raw_data, indent=2)}\n\n"
             "Compare our offerings against the market and return the structured gap-analysis JSON."
@@ -154,6 +196,7 @@ def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
         system = SYSTEM
         prompt = (
             f"Our Business:\n{json.dumps(business, indent=2)}\n\n"
+            f"{location_context}\n"
             f"Raw Competitor Data:\n{json.dumps(raw_data, indent=2)}\n\n"
             "Perform a deep competitive analysis. Return the structured JSON."
         )
