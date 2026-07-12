@@ -45,14 +45,11 @@ function Unit({ agent, last }: { agent: AgentState; last: boolean }) {
             <span className="font-mono text-[10px] text-[var(--mute)]">UNIT {String(agent.id).padStart(2, '0')}</span>
             <span className="text-sm text-[var(--bone)] truncate">{agent.label.replace(/^Agent \d+\s*[—-]\s*/, '')}</span>
           </div>
-          <div className="flex items-center gap-2">
-            {hasTokens && (
-              <span className="font-mono text-[10px] text-[var(--dim)]" title="tokens: input / output">
-                ↑{fmt(agent.tokensIn)} <span className="text-[var(--mute)]">·</span> ↓{fmt(agent.tokensOut)} tok
-              </span>
-            )}
-            <span className={`chip border ${CHIP[agent.status]}`}>{CHIP_TEXT[agent.status]}</span>
-          </div>
+          {hasTokens && (
+            <span className="font-mono text-[10px] text-[var(--dim)]" title="tokens: input / output">
+              ↑{fmt(agent.tokensIn)} <span className="text-[var(--mute)]">·</span> ↓{fmt(agent.tokensOut)} tok
+            </span>
+          )}
         </div>
 
         {/* live commentary while this agent runs */}
