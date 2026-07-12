@@ -1,6 +1,6 @@
 """
 Agent 3 — Deep Analyst
-Model  : claude-opus-4-8
+Model  : claude-sonnet-4-6
 Tool   : Extended Thinking
 Output : analysis.json — SWOT, pricing table, SEO scores, review sentiment
 """
@@ -11,7 +11,7 @@ from config import settings
 
 client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
 
-MODEL = "claude-opus-4-8"
+MODEL = "claude-sonnet-4-6"
 
 SYSTEM = """
 You are Agent 3 — the Deep Analyst in a competitive intelligence pipeline.
@@ -34,14 +34,14 @@ produce a deep competitive analysis JSON with these keys:
     }
   },
   "review_sentiment": [
-    {"competitor": "...", "rating": 0.0, "sentiment": "positive|neutral|negative",
+    {"competitor": "...", "website": "...(from input data)", "rating": 0.0, "sentiment": "positive|neutral|negative",
      "top_positives": [], "top_negatives": []}
   ],
   "seo_analysis": [
     {"competitor": "...", "top_keywords": [], "estimated_authority": "high|medium|low"}
   ],
   "competitor_scores": [
-    {"competitor": "...", "threat_score": 0-10, "threat_level": "high|medium|low",
+    {"competitor": "...", "website": "...(from input data)", "threat_score": 0-10, "threat_level": "high|medium|low",
      "reasoning": "..."}
   ],
   "top_3_recommendations": ["...", "...", "..."],
@@ -74,13 +74,13 @@ OUR offerings against the market and produce a JSON that makes the gaps explicit
     "competitors": { "You": {"FeatureName": true|false}, "CompetitorName": {"FeatureName": true|false} }
   },
   "review_sentiment": [
-    {"competitor": "...", "rating": 0.0, "sentiment": "positive|neutral|negative", "top_positives": [], "top_negatives": []}
+    {"competitor": "...", "website": "...(from input data)", "rating": 0.0, "sentiment": "positive|neutral|negative", "top_positives": [], "top_negatives": []}
   ],
   "seo_analysis": [
     {"competitor": "...", "top_keywords": [], "estimated_authority": "high|medium|low"}
   ],
   "competitor_scores": [
-    {"competitor": "...", "threat_score": 0-10, "threat_level": "high|medium|low", "reasoning": "..."}
+    {"competitor": "...", "website": "...(from input data)", "threat_score": 0-10, "threat_level": "high|medium|low", "reasoning": "..."}
   ],
   "gap_analysis": {
     "missing_services": [ {"service": "...", "offered_by": ["..."], "impact": "..."} ],
@@ -99,8 +99,43 @@ Ground every gap in real competitor data and our real offerings. Return ONLY the
 """
 
 
+def _extract_json(text: str) -> dict | None:
+    """Try multiple strategies to extract JSON from model output."""
+    clean = text.strip()
+    try:
+        return json.loads(clean)
+    except json.JSONDecodeError:
+        pass
+    if "```" in clean:
+        parts = clean.split("```")
+        for part in parts:
+            p = part.strip()
+            if p.startswith("json"):
+                p = p[4:].strip()
+            if p.startswith("{"):
+                try:
+                    return json.loads(p)
+                except json.JSONDecodeError:
+                    pass
+    brace_start = clean.find("{")
+    if brace_start >= 0:
+        depth = 0
+        for i in range(brace_start, len(clean)):
+            if clean[i] == "{":
+                depth += 1
+            elif clean[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(clean[brace_start : i + 1])
+                    except json.JSONDecodeError:
+                        break
+    return None
+
+
 def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
-        own_offerings: str | None = None, on_token=None, on_usage=None) -> dict:
+        own_offerings: str | None = None, on_token=None, on_usage=None,
+        model: str | None = None) -> dict:
     """
     Runs Agent 3 with adaptive thinking and returns the analysis dict.
     In gap_analysis mode it also folds in the user's own offerings.
@@ -123,13 +158,16 @@ def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
             "Perform a deep competitive analysis. Return the structured JSON."
         )
 
-    # Adaptive thinking — claude-opus-4-8 controls thinking depth itself;
-    # effort tunes how deeply it reasons (budget_tokens is rejected on this model)
+    use_model = model or MODEL
+    thinking_cfg = (
+        {"type": "adaptive"}
+        if use_model.startswith("claude-opus")
+        else {"type": "enabled", "budget_tokens": 8000}
+    )
     response = client.messages.create(
-        model=MODEL,
+        model=use_model,
         max_tokens=16000,
-        thinking={"type": "adaptive"},
-        output_config={"effort": "high"},
+        thinking=thinking_cfg,
         system=system,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -145,22 +183,23 @@ def run(input_schema: dict, raw_data: list[dict], mode: str = "market_overview",
             if on_token:
                 on_token(block.text)
 
-    try:
-        clean = full_text.strip()
-        if clean.startswith("```"):
-            clean = clean.split("```")[1]
-            if clean.startswith("json"):
-                clean = clean[4:]
-        return json.loads(clean.strip())
-    except json.JSONDecodeError:
-        return {
-            "executive_summary": "Analysis could not be parsed.",
-            "swot": {"strengths": [], "weaknesses": [], "opportunities": [], "threats": []},
-            "pricing_comparison": [],
-            "feature_matrix": {"features": [], "competitors": {}},
-            "review_sentiment": [],
-            "seo_analysis": [],
-            "competitor_scores": [],
-            "top_3_recommendations": [],
-            "gaps_and_opportunities": []
-        }
+    parsed = _extract_json(full_text)
+    if parsed:
+        print(f"[Agent3] Analysis parsed: {list(parsed.keys())}")
+        print(f"[Agent3] competitor_scores={len(parsed.get('competitor_scores', []))}, "
+              f"pricing={len(parsed.get('pricing_comparison', []))}, "
+              f"features={len(parsed.get('feature_matrix', {}).get('features', []))}")
+        return parsed
+
+    print(f"[Agent3] JSON parse FAILED, raw length={len(full_text)}")
+    return {
+        "executive_summary": "Analysis could not be parsed.",
+        "swot": {"strengths": [], "weaknesses": [], "opportunities": [], "threats": []},
+        "pricing_comparison": [],
+        "feature_matrix": {"features": [], "competitors": {}},
+        "review_sentiment": [],
+        "seo_analysis": [],
+        "competitor_scores": [],
+        "top_3_recommendations": [],
+        "gaps_and_opportunities": []
+    }

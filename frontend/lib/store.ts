@@ -16,14 +16,40 @@ export interface AgentState {
 
 const AGENTS: Omit<AgentState, 'status' | 'tokens' | 'tokensIn' | 'tokensOut'>[] = [
   { id: 0, label: 'Agent 0 — Business Discovery',  model: 'claude-sonnet-4-6',              activity: 'Searching the web for local competitors' },
-  { id: 1, label: 'Agent 1 — Scraper Generator',   model: 'claude-opus-4-8',                activity: 'Planning what to research per competitor' },
+  { id: 1, label: 'Agent 1 — Scraper Generator',   model: 'claude-sonnet-4-6',              activity: 'Planning what to research per competitor' },
   { id: 2, label: 'Agent 2 — Website Scraper',     model: 'claude-haiku-4-5-20251001',      activity: 'Gathering competitor data via web search' },
-  { id: 3, label: 'Agent 3 — Deep Analyst',        model: 'claude-opus-4-8 + Extended Thinking', activity: 'Analysing pricing, features, reviews & gaps' },
-  { id: 4, label: 'Agent 4 — Report Writer',       model: 'claude-opus-4-8 + Streaming',    activity: 'Writing the intelligence dossier' },
+  { id: 3, label: 'Agent 3 — Deep Analyst',        model: 'claude-sonnet-4-6 + Thinking',   activity: 'Analysing pricing, features, reviews & gaps' },
+  { id: 4, label: 'Agent 4 — Report Writer',       model: 'claude-sonnet-4-6 + Streaming',  activity: 'Writing the intelligence dossier' },
 ]
 
 function freshAgents(): AgentState[] {
   return AGENTS.map(a => ({ ...a, status: 'pending', tokens: '', tokensIn: 0, tokensOut: 0 }))
+}
+
+export interface CompetitorLocation {
+  name: string
+  website: string
+  address: string
+  phone?: string
+  source?: string
+  priority?: string
+  notes?: string
+  lat?: number
+  lng?: number
+}
+
+export interface MapData {
+  business: { name: string; location: string }
+  competitors: CompetitorLocation[]
+  center: { lat: number | null; lng: number | null }
+  search_radius_km: number
+}
+
+export interface MapPreview {
+  lat: number
+  lng: number
+  radiusKm: number
+  label: string
 }
 
 interface PipelineStore {
@@ -33,14 +59,21 @@ interface PipelineStore {
   reportHtml: string
   pdfUrl: string | null
   error: string | null
+  mapData: MapData | null
+  mapPreview: MapPreview | null
 
+  setMapPreview: (p: MapPreview | null) => void
   startPipeline: (input: {
     business_name: string
     business_type: string
     location: string
     search_radius_km: number
+    max_competitors?: number
+    use_opus?: boolean
     mode?: 'market_overview' | 'gap_analysis'
     own_offerings?: string
+    latitude?: number | null
+    longitude?: number | null
   }) => Promise<void>
   reset: () => void
 }
@@ -55,7 +88,11 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
   pdfUrl: null,
   error: null,
 
-  reset: () => set({ status: 'idle', runId: null, agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null }),
+  mapData: null,
+  mapPreview: null,
+
+  setMapPreview: (p) => set({ mapPreview: p }),
+  reset: () => set({ status: 'idle', runId: null, agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null, mapData: null }),
 
   startPipeline: async (input) => {
     set({ status: 'running', agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null })
@@ -101,22 +138,63 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
       }))
     })
 
-    es.addEventListener('agent_done', (e) => {
+    es.addEventListener('agent_done', async (e) => {
       const d = JSON.parse(e.data)
       set(s => ({
         agents: s.agents.map(a => a.id === d.agent_id ? { ...a, status: 'done' } : a)
       }))
+
+      // When Agent 0 (Discovery) finishes, fetch competitor data for the map
+      if (d.agent_id === 0 && !get().mapData) {
+        console.log('[SSE] Agent 0 done, fetching competitor data via REST...')
+        // Small delay to let the DB write complete
+        await new Promise(r => setTimeout(r, 1000))
+        try {
+          const cr = await fetch(`${API}/api/pipeline/${run_id}/competitors`)
+          console.log('[SSE] Agent 0 REST fetch status:', cr.status)
+          if (cr.ok) {
+            const data = await cr.json()
+            console.log('[SSE] Agent 0 REST fetch data:', data)
+            set({ mapData: data })
+          }
+        } catch (err) {
+          console.error('[SSE] Agent 0 REST fetch error:', err)
+        }
+      }
+    })
+
+    es.addEventListener('competitors_discovered', (e) => {
+      const d = JSON.parse(e.data)
+      console.log('[SSE] competitors_discovered received:', d)
+      console.log('[SSE] competitors count:', d?.competitors?.length)
+      set({ mapData: d })
     })
 
     es.addEventListener('pipeline_done', async (e) => {
       const d = JSON.parse(e.data)
-      // Fetch the rendered HTML report
       const rr = await fetch(`${API}/api/pipeline/${run_id}/report`)
       const html = rr.ok ? await rr.text() : ''
-      // pdf_url is a relative path (/reports/...) served by the backend, not
-      // the frontend — resolve it against the API base so the link works.
       const pdf = d.pdf_url ? `${API}${d.pdf_url}` : null
       set({ status: 'completed', reportHtml: html, pdfUrl: pdf })
+
+      // Fallback: fetch competitor map data if SSE event was missed
+      if (!get().mapData) {
+        console.log('[SSE] mapData is null at pipeline_done, trying REST fallback...')
+        try {
+          const cr = await fetch(`${API}/api/pipeline/${run_id}/competitors`)
+          console.log('[SSE] REST fallback status:', cr.status)
+          if (cr.ok) {
+            const fallbackData = await cr.json()
+            console.log('[SSE] REST fallback data:', fallbackData)
+            set({ mapData: fallbackData })
+          }
+        } catch (err) {
+          console.error('[SSE] REST fallback error:', err)
+        }
+      } else {
+        console.log('[SSE] mapData already set at pipeline_done, skipping fallback')
+      }
+
       es.close()
     })
 

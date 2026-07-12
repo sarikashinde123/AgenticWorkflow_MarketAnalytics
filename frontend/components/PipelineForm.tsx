@@ -2,19 +2,23 @@
 import { useState } from 'react'
 import { usePipelineStore } from '@/lib/store'
 import Radar from './Radar'
+import LocationSearch from './LocationSearch'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 type Mode = 'market_overview' | 'gap_analysis'
 
 export default function PipelineForm() {
-  const { startPipeline, status } = usePipelineStore()
+  const { startPipeline, status, setMapPreview } = usePipelineStore()
   const [mode, setMode] = useState<Mode>('market_overview')
   const [form, setForm] = useState({
     business_name: '',
     business_type: '',
     location: '',
     search_radius_km: 5,
+    max_competitors: 6,
   })
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
+  const [useOpus, setUseOpus] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -24,7 +28,14 @@ export default function PipelineForm() {
 
   function handle(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target
-    setForm(f => ({ ...f, [name]: name === 'search_radius_km' ? Number(value) : value }))
+    const parsed = (name === 'search_radius_km' || name === 'max_competitors') ? Number(value) : value
+    setForm(f => ({ ...f, [name]: parsed }))
+    if (name === 'search_radius_km' && coords.lat != null && coords.lng != null) {
+      setMapPreview({ lat: coords.lat, lng: coords.lng, radiusKm: Number(value), label: form.business_name })
+    }
+    if (name === 'business_name' && coords.lat != null && coords.lng != null) {
+      setMapPreview({ lat: coords.lat, lng: coords.lng, radiusKm: form.search_radius_km, label: value })
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -33,7 +44,7 @@ export default function PipelineForm() {
     if (!form.business_name || !form.business_type || !form.location) return
 
     if (mode === 'market_overview') {
-      startPipeline({ ...form, mode })
+      startPipeline({ ...form, mode, use_opus: useOpus, latitude: coords.lat, longitude: coords.lng })
       return
     }
 
@@ -53,7 +64,7 @@ export default function PipelineForm() {
       }
       const { text } = await res.json()
       setUploading(false)
-      startPipeline({ ...form, mode, own_offerings: text })
+      startPipeline({ ...form, mode, use_opus: useOpus, own_offerings: text, latitude: coords.lat, longitude: coords.lng })
     } catch (e) {
       setUploading(false)
       setErr(e instanceof Error ? e.message : 'Upload failed.')
@@ -96,8 +107,27 @@ export default function PipelineForm() {
                  placeholder="Bakery · Gym · Salon · Clinic" required disabled={busy} className="field" />
         </Field>
         <Field id="location" label="Location">
-          <input id="location" name="location" value={form.location} onChange={handle}
-                 placeholder="Baner, Pune" required disabled={busy} className="field" />
+          <LocationSearch
+            value={form.location}
+            onChange={(place) => {
+              setForm(f => ({ ...f, location: place.formatted_address }))
+              setCoords({ lat: place.lat, lng: place.lng })
+              if (place.lat != null && place.lng != null) {
+                setMapPreview({ lat: place.lat, lng: place.lng, radiusKm: form.search_radius_km, label: form.business_name })
+              } else {
+                setMapPreview(null)
+              }
+            }}
+            disabled={busy}
+          />
+          {coords.lat != null && (
+            <p className="text-[10px] font-mono text-[var(--dim)] mt-1.5 flex items-center gap-1.5">
+              <svg className="h-3 w-3 text-[var(--confirm)]" viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {coords.lat.toFixed(4)}, {coords.lng!.toFixed(4)}
+            </p>
+          )}
         </Field>
 
         <div>
@@ -109,6 +139,24 @@ export default function PipelineForm() {
                  value={form.search_radius_km} onChange={handle} disabled={busy} className="w-full"
                  style={{ background: `linear-gradient(90deg, var(--signal) ${((form.search_radius_km - 1) / 24) * 100}%, rgba(210,190,150,0.18) ${((form.search_radius_km - 1) / 24) * 100}%)` }} />
         </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="max_comp" className="eyebrow" style={{ letterSpacing: '.16em' }}>Max competitors</label>
+            <span className="font-mono text-sm text-[var(--signal)]">{form.max_competitors}</span>
+          </div>
+          <input id="max_comp" type="range" name="max_competitors" min={3} max={15}
+                 value={form.max_competitors} onChange={handle} disabled={busy} className="w-full"
+                 style={{ background: `linear-gradient(90deg, var(--signal) ${((form.max_competitors - 3) / 12) * 100}%, rgba(210,190,150,0.18) ${((form.max_competitors - 3) / 12) * 100}%)` }} />
+        </div>
+
+        <label className={`flex items-center gap-3 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+          <input type="checkbox" checked={useOpus} onChange={e => setUseOpus(e.target.checked)} disabled={busy}
+                 className="sr-only peer" />
+          <span className="relative w-9 h-5 rounded-full border border-[var(--line-2)] bg-[rgba(255,255,255,.04)] peer-checked:bg-[rgba(129,140,248,.25)] peer-checked:border-[rgba(129,140,248,.5)] transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-3 after:h-3 after:rounded-full after:bg-[var(--dim)] peer-checked:after:bg-[#818cf8] peer-checked:after:translate-x-4 after:transition-transform" />
+          <span className="eyebrow" style={{ letterSpacing: '.16em' }}>Faster processing</span>
+          <span className="text-[10px] font-mono text-[var(--mute)]">{useOpus ? 'OPUS' : 'SONNET'}</span>
+        </label>
 
         {/* Gap analysis: upload own offerings */}
         {mode === 'gap_analysis' && (

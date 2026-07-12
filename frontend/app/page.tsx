@@ -1,5 +1,6 @@
 import PipelineForm from '@/components/PipelineForm'
 import PipelineStatus from '@/components/PipelineStatus'
+import CompetitorMap from '@/components/CompetitorMap'
 import ReportViewer from '@/components/ReportViewer'
 
 export default function Home() {
@@ -9,7 +10,6 @@ export default function Home() {
       <header className="sticky top-0 z-20 border-b border-[var(--line)] backdrop-blur-md bg-[var(--ink)]/75">
         <div className="mx-auto max-w-6xl px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* crosshair mark */}
             <svg className="h-7 w-7 text-[var(--signal)]" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" strokeOpacity=".5" />
               <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
@@ -22,7 +22,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* small heading */}
           <h1 className="hidden md:block font-display text-[var(--bone)] text-base tracking-tight text-center flex-1">
             Command your local market
           </h1>
@@ -42,6 +41,7 @@ export default function Home() {
           </div>
           <div className="lg:col-span-3 space-y-6">
             <PipelineStatus />
+            <CompetitorMap />
             <ReportViewer />
           </div>
         </div>

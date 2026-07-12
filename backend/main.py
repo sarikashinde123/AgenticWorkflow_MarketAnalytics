@@ -159,6 +159,15 @@ def get_status(run_id: str, db: Session = Depends(get_db)):
     )
 
 
+# ── Competitor map data ────────────────────────────────────────
+@app.get("/api/pipeline/{run_id}/competitors")
+def get_competitors(run_id: str, db: Session = Depends(get_db)):
+    rec = db.query(RunRecord).filter_by(run_id=run_id).first()
+    if not rec or not rec.competitors:
+        raise HTTPException(status_code=404, detail="Competitors not ready")
+    return rec.competitors
+
+
 # ── HTML report ────────────────────────────────────────────────
 @app.get("/api/pipeline/{run_id}/report", response_class=HTMLResponse)
 def get_report(run_id: str, db: Session = Depends(get_db)):
@@ -182,6 +191,24 @@ def get_history(db: Session = Depends(get_db)):
         }
         for r in runs
     ]
+
+
+# ── Geocoding proxy (avoids CORS issues with Nominatim) ──────
+@app.get("/api/geocode")
+async def geocode(q: str, limit: int = 5):
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={"format": "json", "q": q, "limit": limit, "addressdetails": 0},
+                headers={"User-Agent": "RECON-CompIntel/1.0 (competitive-intel app)", "Accept-Language": "en"},
+            )
+            if r.status_code == 200:
+                return r.json()
+            return []
+    except Exception:
+        return []
 
 
 @app.get("/health")

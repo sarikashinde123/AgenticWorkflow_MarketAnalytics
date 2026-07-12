@@ -4,6 +4,7 @@ Publishes SSE events to Redis pub/sub so FastAPI can stream them to the browser.
 """
 from __future__ import annotations
 import json
+import time
 from datetime import datetime
 import redis
 
@@ -23,10 +24,10 @@ r = redis.from_url(
 
 AGENTS_META = [
     {"id": 0, "label": "Agent 0 — Business Discovery",  "model": "claude-sonnet-4-6"},
-    {"id": 1, "label": "Agent 1 — Scraper Generator",   "model": "claude-opus-4-8"},
+    {"id": 1, "label": "Agent 1 — Scraper Generator",   "model": "claude-sonnet-4-6"},
     {"id": 2, "label": "Agent 2 — Website Scraper",     "model": "claude-haiku-4-5-20251001"},
-    {"id": 3, "label": "Agent 3 — Deep Analyst",        "model": "claude-opus-4-8"},
-    {"id": 4, "label": "Agent 4 — Report Writer",       "model": "claude-opus-4-8"},
+    {"id": 3, "label": "Agent 3 — Deep Analyst",        "model": "claude-sonnet-4-6"},
+    {"id": 4, "label": "Agent 4 — Report Writer",       "model": "claude-sonnet-4-6"},
 ]
 
 
@@ -66,8 +67,13 @@ def run_pipeline(self, run_id: str, input_data: dict):
         business_type     = input_data["business_type"]
         location          = input_data["location"]
         search_radius_km  = input_data["search_radius_km"]
+        max_competitors   = input_data.get("max_competitors", 6)
+        use_opus          = input_data.get("use_opus", False)
+        opus_model        = "claude-opus-4-8" if use_opus else None
         mode              = input_data.get("mode", "market_overview")
         own_offerings     = input_data.get("own_offerings")
+        latitude          = input_data.get("latitude")
+        longitude         = input_data.get("longitude")
 
         # ── Token accounting ──────────────────────────────────────
         agent_usage = {i: {"input": 0, "output": 0} for i in range(5)}
@@ -90,42 +96,74 @@ def run_pipeline(self, run_id: str, input_data: dict):
                 })
             return cb
 
+        pipeline_t0 = time.time()
+
         # ── Agent 0 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 0, "agent_label": AGENTS_META[0]["label"]})
+        t0 = time.time()
 
         def tok0(t): _pub(run_id, "agent_token", {"agent_id": 0, "data": t})
 
         input_schema = agent0_discovery.run(
-            business_name, business_type, location, search_radius_km, on_token=tok0, on_usage=_usage_cb(0)
+            business_name, business_type, location, search_radius_km,
+            max_competitors=max_competitors,
+            latitude=latitude, longitude=longitude,
+            on_token=tok0, on_usage=_usage_cb(0),
+            model=opus_model,
         )
+
+        # Programmatic cap: sort by priority (high→medium→low) and slice
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        raw_comps = input_schema.get("competitors", [])
+        raw_comps.sort(key=lambda c: priority_order.get(c.get("priority", "medium"), 1))
+        input_schema["competitors"] = raw_comps[:max_competitors]
+        print(f"[Pipeline] Agent 0 done in {time.time()-t0:.1f}s — {len(raw_comps)} → {len(input_schema['competitors'])} competitors")
+
         _pub(run_id, "agent_done", {"agent_id": 0, "data": json.dumps(input_schema)[:200]})
+
+        # Save & send competitor locations for the map
+        competitors_payload = {
+            "business": input_schema.get("business", {}),
+            "competitors": input_schema.get("competitors", []),
+            "search_radius_km": input_schema.get("search_radius_km", search_radius_km),
+            "center": {"lat": latitude, "lng": longitude},
+        }
+        _update_db(run_id, competitors=competitors_payload)
+        _pub(run_id, "competitors_discovered", competitors_payload)
 
         # ── Agent 1 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 1, "agent_label": AGENTS_META[1]["label"]})
+        t1 = time.time()
 
         def tok1(t): _pub(run_id, "agent_token", {"agent_id": 1, "data": t})
 
-        scraper_scripts = agent1_scraper_gen.run(input_schema, on_token=tok1, on_usage=_usage_cb(1))
+        scraper_scripts = agent1_scraper_gen.run(input_schema, on_token=tok1, on_usage=_usage_cb(1), model=opus_model)
+        print(f"[Pipeline] Agent 1 done in {time.time()-t1:.1f}s — {len(scraper_scripts)} scripts")
         _pub(run_id, "agent_done", {"agent_id": 1, "data": f"{len(scraper_scripts)} scripts generated"})
 
         # ── Agent 2 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 2, "agent_label": AGENTS_META[2]["label"]})
+        t2 = time.time()
 
         def tok2(t): _pub(run_id, "agent_token", {"agent_id": 2, "data": t})
 
-        raw_data = agent2_scraper.run(scraper_scripts, on_token=tok2, on_usage=_usage_cb(2))
+        raw_data = agent2_scraper.run(scraper_scripts, on_token=tok2, on_usage=_usage_cb(2), model=opus_model)
+        print(f"[Pipeline] Agent 2 done in {time.time()-t2:.1f}s — {len(raw_data)} competitors scraped")
         _pub(run_id, "agent_done", {"agent_id": 2, "data": f"{len(raw_data)} competitors scraped"})
 
         # ── Agent 3 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 3, "agent_label": AGENTS_META[3]["label"]})
+        t3 = time.time()
 
         def tok3(t): _pub(run_id, "agent_token", {"agent_id": 3, "data": t})
 
-        analysis = agent3_analyst.run(input_schema, raw_data, mode=mode, own_offerings=own_offerings, on_token=tok3, on_usage=_usage_cb(3))
+        analysis = agent3_analyst.run(input_schema, raw_data, mode=mode, own_offerings=own_offerings, on_token=tok3, on_usage=_usage_cb(3), model=opus_model)
+        print(f"[Pipeline] Agent 3 done in {time.time()-t3:.1f}s")
         _pub(run_id, "agent_done", {"agent_id": 3, "data": analysis.get("executive_summary", "")[:200]})
 
         # ── Agent 4 ──────────────────────────────────────────────
         _pub(run_id, "agent_start", {"agent_id": 4, "agent_label": AGENTS_META[4]["label"]})
+        t4 = time.time()
 
         html_chunks: list[str] = []
 
@@ -133,9 +171,11 @@ def run_pipeline(self, run_id: str, input_data: dict):
             html_chunks.append(t)
             _pub(run_id, "agent_token", {"agent_id": 4, "data": t})
 
-        agent4_report.run(input_schema, analysis, mode=mode, on_chunk=tok4, on_usage=_usage_cb(4))
+        agent4_report.run(input_schema, analysis, mode=mode, on_chunk=tok4, on_usage=_usage_cb(4), model=opus_model)
         report_html = "".join(html_chunks)
 
+        print(f"[Pipeline] Agent 4 done in {time.time()-t4:.1f}s — {len(report_html):,} chars")
+        print(f"[Pipeline] TOTAL pipeline time: {time.time()-pipeline_t0:.1f}s")
         _pub(run_id, "agent_done", {"agent_id": 4, "data": f"Report generated ({len(report_html):,} chars)"})
 
         # ── PDF conversion via ReportLab ─────────────────────────

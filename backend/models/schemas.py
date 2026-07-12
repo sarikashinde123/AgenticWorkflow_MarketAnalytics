@@ -30,9 +30,13 @@ class PipelineInput(BaseModel):
     business_type: str = Field(..., min_length=2, max_length=100)
     location: str = Field(..., min_length=2, max_length=200)
     search_radius_km: int = Field(default=5, ge=1, le=50)
+    max_competitors: int = Field(default=6, ge=3, le=15)
+    use_opus: bool = Field(default=False)
     mode: PipelineMode = PipelineMode.market_overview
     # In gap_analysis mode, the user's own offerings (extracted from their PDF).
     own_offerings: Optional[str] = Field(default=None, max_length=20000)
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
 
 
 # ── Business / Competitor schema ───────────────────────────────
