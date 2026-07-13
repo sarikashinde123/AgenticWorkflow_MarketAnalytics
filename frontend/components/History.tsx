@@ -168,15 +168,31 @@ export default function History() {
                   {/* Report */}
                   <td className="py-3 text-center">
                     {run.report_ready ? (
-                      <button
-                        onClick={() => openReport(run.run_id)}
-                        className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md
-                                   border border-[rgba(245,165,36,.35)] text-[var(--signal)] bg-[rgba(245,165,36,.08)]
-                                   hover:bg-[rgba(245,165,36,.18)] transition-colors"
-                      >
-                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        View
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => openReport(run.run_id)}
+                          className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md
+                                     border border-[rgba(245,165,36,.35)] text-[var(--signal)] bg-[rgba(245,165,36,.08)]
+                                     hover:bg-[rgba(245,165,36,.18)] transition-colors"
+                        >
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                          View
+                        </button>
+                        {run.pdf_url && (
+                          <a
+                            href={`${API}${run.pdf_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md
+                                       border border-[rgba(55,208,166,.35)] text-[var(--confirm)] bg-[rgba(55,208,166,.08)]
+                                       hover:bg-[rgba(55,208,166,.18)] transition-colors"
+                          >
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            PDF
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-[11px] font-mono text-[var(--dim)]">—</span>
                     )}
