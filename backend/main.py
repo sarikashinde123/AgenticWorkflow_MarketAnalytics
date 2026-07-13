@@ -179,18 +179,35 @@ def get_report(run_id: str, db: Session = Depends(get_db)):
 
 # ── Run history ────────────────────────────────────────────────
 @app.get("/api/pipeline/history")
-def get_history(db: Session = Depends(get_db)):
-    runs = db.query(RunRecord).order_by(RunRecord.created_at.desc()).limit(20).all()
-    return [
-        {
+def get_history(limit: int = 50, db: Session = Depends(get_db)):
+    runs = db.query(RunRecord).order_by(RunRecord.created_at.desc()).limit(limit).all()
+    result = []
+    for r in runs:
+        inp = r.input_data or {}
+        agents = r.agents or []
+        total_in = sum(a.get("tokens_in", 0) or 0 for a in agents)
+        total_out = sum(a.get("tokens_out", 0) or 0 for a in agents)
+        duration = None
+        if r.created_at and r.completed_at:
+            duration = int((r.completed_at - r.created_at).total_seconds())
+        result.append({
             "run_id": r.run_id,
             "status": r.status,
-            "business_name": (r.input_data or {}).get("business_name", ""),
+            "business_name": inp.get("business_name", ""),
+            "business_type": inp.get("business_type", ""),
+            "location": inp.get("location", ""),
+            "mode": inp.get("mode", "market_overview"),
             "created_at": r.created_at.isoformat() if r.created_at else None,
+            "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+            "duration_seconds": duration,
+            "tokens_in": total_in,
+            "tokens_out": total_out,
+            "tokens_total": total_in + total_out,
             "report_ready": bool(r.report_html),
-        }
-        for r in runs
-    ]
+            "pdf_url": r.pdf_url,
+            "error": r.error,
+        })
+    return result
 
 
 # ── Geocoding proxy (avoids CORS issues with Nominatim) ──────

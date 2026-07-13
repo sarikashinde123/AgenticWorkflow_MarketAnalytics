@@ -1,9 +1,16 @@
+'use client'
+import { useState } from 'react'
 import PipelineForm from '@/components/PipelineForm'
 import PipelineStatus from '@/components/PipelineStatus'
 import CompetitorMap from '@/components/CompetitorMap'
 import ReportViewer from '@/components/ReportViewer'
+import History from '@/components/History'
+
+type Tab = 'scout' | 'history'
 
 export default function Home() {
+  const [tab, setTab] = useState<Tab>('scout')
+
   return (
     <main className="min-h-screen">
       {/* Terminal top bar */}
@@ -22,6 +29,30 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Tab navigation */}
+          <nav className="flex items-center gap-1 ml-8">
+            <button
+              onClick={() => setTab('scout')}
+              className={`px-4 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider transition-colors ${
+                tab === 'scout'
+                  ? 'bg-[rgba(245,165,36,.15)] text-[var(--signal)] border border-[rgba(245,165,36,.35)]'
+                  : 'text-[var(--dim)] hover:text-[var(--mute)] border border-transparent'
+              }`}
+            >
+              Scout
+            </button>
+            <button
+              onClick={() => setTab('history')}
+              className={`px-4 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider transition-colors ${
+                tab === 'history'
+                  ? 'bg-[rgba(245,165,36,.15)] text-[var(--signal)] border border-[rgba(245,165,36,.35)]'
+                  : 'text-[var(--dim)] hover:text-[var(--mute)] border border-transparent'
+              }`}
+            >
+              History
+            </button>
+          </nav>
+
           <div className="flex-1" />
 
           <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--dim)]">
@@ -31,18 +62,22 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Operations grid */}
+      {/* Content */}
       <section className="mx-auto max-w-6xl px-5 pt-8 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
-          <div className="lg:col-span-2 lg:sticky lg:top-20">
-            <PipelineForm />
+        {tab === 'scout' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            <div className="lg:col-span-2 lg:sticky lg:top-20">
+              <PipelineForm />
+            </div>
+            <div className="lg:col-span-3 space-y-6">
+              <PipelineStatus />
+              <CompetitorMap />
+              <ReportViewer />
+            </div>
           </div>
-          <div className="lg:col-span-3 space-y-6">
-            <PipelineStatus />
-            <CompetitorMap />
-            <ReportViewer />
-          </div>
-        </div>
+        ) : (
+          <History />
+        )}
       </section>
     </main>
   )
