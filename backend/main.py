@@ -210,7 +210,7 @@ def get_history(limit: int = 50, db: Session = Depends(get_db)):
     return result
 
 
-# ── Geocoding proxy (avoids CORS issues with Nominatim) ──────
+# ── Geocoding proxy (Photon primary, Nominatim fallback) ──────
 _geocode_cache: dict[str, list] = {}
 
 @app.get("/api/geocode")
@@ -221,6 +221,32 @@ async def geocode(q: str, limit: int = 5):
         return _geocode_cache[cache_key]
     try:
         async with httpx.AsyncClient(timeout=10) as client:
+            # Primary: Photon (free, OSM-based, no aggressive rate limiting)
+            r = await client.get(
+                "https://photon.komoot.io/api/",
+                params={"q": q, "limit": limit, "lang": "en"},
+            )
+            if r.status_code == 200:
+                features = r.json().get("features", [])
+                data = []
+                for f in features:
+                    props = f.get("properties", {})
+                    coords = f.get("geometry", {}).get("coordinates", [])
+                    parts = [props.get("name", "")]
+                    for key in ("city", "state", "country"):
+                        v = props.get(key, "")
+                        if v and v != parts[0]:
+                            parts.append(v)
+                    data.append({
+                        "display_name": ", ".join(p for p in parts if p),
+                        "lat": str(coords[1]) if len(coords) >= 2 else "0",
+                        "lon": str(coords[0]) if len(coords) >= 2 else "0",
+                        "place_id": props.get("osm_id", 0),
+                    })
+                _geocode_cache[cache_key] = data
+                return data
+
+            # Fallback: Nominatim
             r = await client.get(
                 "https://nominatim.openstreetmap.org/search",
                 params={"format": "json", "q": q, "limit": limit, "addressdetails": 0},
