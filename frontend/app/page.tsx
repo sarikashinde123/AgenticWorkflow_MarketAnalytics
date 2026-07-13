@@ -17,14 +17,12 @@ export default function Home() {
               <circle cx="12" cy="12" r="1.5" fill="currentColor" />
             </svg>
             <div className="leading-none">
-              <div className="font-display text-lg text-[var(--bone)] tracking-wide">RECON</div>
-              <div className="eyebrow" style={{ fontSize: '.55rem', letterSpacing: '.32em' }}>Competitive intelligence</div>
+              <div className="font-display text-2xl text-[var(--bone)] tracking-wide">GeoScout</div>
+              <div className="italic text-[var(--bone)]" style={{ fontSize: '10px', letterSpacing: '.28em' }}>Proximity Intelligence, Simplified!</div>
             </div>
           </div>
 
-          <h1 className="hidden md:block font-display text-[var(--bone)] text-base tracking-tight text-center flex-1">
-            Command your local market
-          </h1>
+          <div className="flex-1" />
 
           <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--dim)]">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[var(--confirm)]" style={{ boxShadow: '0 0 6px var(--confirm)' }} />

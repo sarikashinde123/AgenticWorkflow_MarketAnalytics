@@ -89,7 +89,7 @@ export default function PipelineStatus() {
           <p className="eyebrow mb-1">
             Operation {runId && <span className="text-[var(--dim)]">#{runId.slice(0, 8)}</span>}
           </p>
-          <h2 className="font-display text-2xl text-[var(--bone)]" style={{ letterSpacing: '-0.01em' }}>Recon sequence</h2>
+          <h2 className="font-display text-[var(--bone)]" style={{ fontSize: '20px', letterSpacing: '-0.01em' }}>Scout Sequence</h2>
         </div>
         {!idle && (
           <button onClick={reset} className="chip border border-[var(--line-2)] text-[var(--dim)] hover:text-[var(--bone)] hover:border-[var(--bone)] transition-colors">
@@ -119,8 +119,8 @@ export default function PipelineStatus() {
             status === 'failed'    ? 'bg-[rgba(242,84,45,.08)] text-[var(--alert)] border-[rgba(242,84,45,.2)]' :
             'bg-[rgba(245,165,36,.08)] text-[var(--signal)] border-[rgba(245,165,36,.2)]'}`}>
             {status === 'running' && <><span className="blink">▸</span> {running ? `${running.activity}…` : 'Scanning your area of operations…'}</>}
-            {status === 'completed' && <>✓ Recon complete — dossier ready.</>}
-            {status === 'failed' && <>✗ {error || 'Recon failed'}</>}
+            {status === 'completed' && <>✓ Scout complete — dossier ready.</>}
+            {status === 'failed' && <>✗ {error || 'Scout failed'}</>}
           </div>
         </>
       )}

@@ -74,7 +74,7 @@ export default function PipelineForm() {
   return (
     <form onSubmit={submit} className="panel rounded-xl p-6 animate-in">
       <p className="eyebrow mb-1">Operation setup</p>
-      <h2 className="font-display text-2xl text-[var(--bone)] mb-4" style={{ letterSpacing: '-0.01em' }}>
+      <h2 className="font-display text-[var(--bone)] mb-4" style={{ fontSize: '20px', letterSpacing: '-0.01em' }}>
         Define your target
       </h2>
 
@@ -132,7 +132,7 @@ export default function PipelineForm() {
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="radius" className="eyebrow" style={{ letterSpacing: '.16em' }}>Search radius</label>
+            <label htmlFor="radius" className="eyebrow font-bold" style={{ letterSpacing: '.16em' }}>Search radius</label>
             <span className="font-mono text-sm text-[var(--signal)]">{form.search_radius_km} km</span>
           </div>
           <input id="radius" type="range" name="search_radius_km" min={1} max={25}
@@ -142,7 +142,7 @@ export default function PipelineForm() {
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="max_comp" className="eyebrow" style={{ letterSpacing: '.16em' }}>Max competitors</label>
+            <label htmlFor="max_comp" className="eyebrow font-bold" style={{ letterSpacing: '.16em' }}>Max competitors</label>
             <span className="font-mono text-sm text-[var(--signal)]">{form.max_competitors}</span>
           </div>
           <input id="max_comp" type="range" name="max_competitors" min={3} max={15}
@@ -192,7 +192,7 @@ export default function PipelineForm() {
               </svg>
               {uploading ? 'Reading PDF…' : 'Scanning…'}
             </>
-          ) : mode === 'gap_analysis' ? 'Run gap analysis' : 'Run recon'}
+          ) : mode === 'gap_analysis' ? 'Run gap analysis' : 'Run scout'}
         </span>
       </button>
     </form>
@@ -218,7 +218,7 @@ function ModeButton({ active, disabled, onClick, title, desc }: {
 function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label htmlFor={id} className="eyebrow block mb-1.5" style={{ letterSpacing: '.16em' }}>{label}</label>
+      <label htmlFor={id} className="eyebrow block mb-1.5 font-bold" style={{ letterSpacing: '.16em' }}>{label}</label>
       {children}
     </div>
   )

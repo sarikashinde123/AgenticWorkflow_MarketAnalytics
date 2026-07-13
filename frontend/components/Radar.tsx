@@ -17,7 +17,7 @@ const STATE_COLOR: Record<RadarState, string> = {
 }
 
 /**
- * The signature element: a recon scope that shows the live search radius and
+ * The signature element: a scout scope that shows the live search radius and
  * sweeps while a run is in progress. Tied to the radius control — not decoration.
  */
 export default function Radar({ radiusKm, state }: { radiusKm: number; state: RadarState }) {

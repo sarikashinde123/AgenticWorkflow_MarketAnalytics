@@ -160,7 +160,7 @@ export default function CompetitorMap() {
 
   return (
     <div className="panel rounded-xl p-5 animate-in">
-      <p className="eyebrow mb-1">Reconnaissance map</p>
+      <p className="eyebrow mb-1">Scout map</p>
       <h2 className="font-display text-xl text-[var(--bone)] mb-3" style={{ letterSpacing: '-0.01em' }}>
         {hasCompetitors ? 'Competitor locations' : 'Search area preview'}
       </h2>

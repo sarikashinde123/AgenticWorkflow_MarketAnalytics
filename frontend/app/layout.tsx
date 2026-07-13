@@ -7,8 +7,8 @@ const body = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono', display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'RECON — Competitive Intelligence',
-  description: 'Field reconnaissance for local businesses: map the competitors in your radius and get a strategic dossier, powered by Anthropic Claude.',
+  title: 'GeoScout — Proximity Intelligence, Simplified!',
+  description: 'Discover competitors in your radius and get a strategic dossier, powered by Anthropic Claude.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
