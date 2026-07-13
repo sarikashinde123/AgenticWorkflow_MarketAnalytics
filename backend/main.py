@@ -211,18 +211,25 @@ def get_history(limit: int = 50, db: Session = Depends(get_db)):
 
 
 # ── Geocoding proxy (avoids CORS issues with Nominatim) ──────
+_geocode_cache: dict[str, list] = {}
+
 @app.get("/api/geocode")
 async def geocode(q: str, limit: int = 5):
     import httpx
+    cache_key = f"{q.strip().lower()}:{limit}"
+    if cache_key in _geocode_cache:
+        return _geocode_cache[cache_key]
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             r = await client.get(
                 "https://nominatim.openstreetmap.org/search",
                 params={"format": "json", "q": q, "limit": limit, "addressdetails": 0},
-                headers={"User-Agent": "RECON-CompIntel/1.0 (competitive-intel app)", "Accept-Language": "en"},
+                headers={"User-Agent": "GeoScout/1.0 (sarikas@incubxperts.com)", "Accept-Language": "en"},
             )
             if r.status_code == 200:
-                return r.json()
+                data = r.json()
+                _geocode_cache[cache_key] = data
+                return data
             return []
     except Exception:
         return []
