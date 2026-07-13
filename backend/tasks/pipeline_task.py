@@ -182,12 +182,23 @@ def run_pipeline(self, run_id: str, input_data: dict):
         pdf_url = _convert_to_pdf(run_id, report_html)
 
         # ── Finalise ──────────────────────────────────────────────
+        agents_data = []
+        for meta in AGENTS_META:
+            aid = meta["id"]
+            agents_data.append({
+                "agent_id": aid,
+                "label": meta["label"],
+                "model": meta["model"],
+                "tokens_in": agent_usage[aid]["input"],
+                "tokens_out": agent_usage[aid]["output"],
+            })
         _update_db(
             run_id,
             status="completed",
             report_html=report_html,
             pdf_url=pdf_url,
             completed_at=datetime.utcnow(),
+            agents=agents_data,
         )
         _pub(run_id, "pipeline_done", {
             "run_id": run_id, "pdf_url": pdf_url,
