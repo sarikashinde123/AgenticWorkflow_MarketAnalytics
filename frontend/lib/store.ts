@@ -59,6 +59,7 @@ interface PipelineStore {
   reportHtml: string
   pdfUrl: string | null
   error: string | null
+  strictNoMatch: boolean
   mapData: MapData | null
   mapPreview: MapPreview | null
 
@@ -70,6 +71,7 @@ interface PipelineStore {
     search_radius_km: number
     max_competitors?: number
     use_opus?: boolean
+    strict_match?: boolean
     mode?: 'market_overview' | 'gap_analysis'
     own_offerings?: string
     latitude?: number | null
@@ -87,15 +89,16 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
   reportHtml: '',
   pdfUrl: null,
   error: null,
+  strictNoMatch: false,
 
   mapData: null,
   mapPreview: null,
 
   setMapPreview: (p) => set({ mapPreview: p }),
-  reset: () => set({ status: 'idle', runId: null, agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null, mapData: null }),
+  reset: () => set({ status: 'idle', runId: null, agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null, strictNoMatch: false, mapData: null }),
 
   startPipeline: async (input) => {
-    set({ status: 'running', agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null })
+    set({ status: 'running', agents: freshAgents(), reportHtml: '', pdfUrl: null, error: null, strictNoMatch: false })
 
     // 1. Start the pipeline
     const res = await fetch(`${API}/api/pipeline/start`, {
@@ -200,7 +203,12 @@ export const usePipelineStore = create<PipelineStore>((set, get) => ({
 
     es.addEventListener('error', (e: any) => {
       const d = e.data ? JSON.parse(e.data) : {}
-      set({ status: 'failed', error: d.message ?? 'Pipeline error' })
+      const isStrictNoMatch = d.message === 'STRICT_NO_MATCH'
+      set({
+        status: 'failed',
+        error: isStrictNoMatch ? (d.detail ?? 'No exact competitors found.') : (d.message ?? 'Pipeline error'),
+        strictNoMatch: isStrictNoMatch,
+      })
       es.close()
     })
 

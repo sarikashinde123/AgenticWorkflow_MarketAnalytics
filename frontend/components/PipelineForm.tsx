@@ -8,7 +8,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 type Mode = 'market_overview' | 'gap_analysis'
 
 export default function PipelineForm() {
-  const { startPipeline, status, setMapPreview } = usePipelineStore()
+  const { startPipeline, status, setMapPreview, error, strictNoMatch, reset } = usePipelineStore()
   const [mode, setMode] = useState<Mode>('market_overview')
   const [form, setForm] = useState({
     business_name: '',
@@ -19,6 +19,7 @@ export default function PipelineForm() {
   })
   const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null })
   const [useOpus, setUseOpus] = useState(false)
+  const [strictMatch, setStrictMatch] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -44,7 +45,7 @@ export default function PipelineForm() {
     if (!form.business_name || !form.business_type || !form.location) return
 
     if (mode === 'market_overview') {
-      startPipeline({ ...form, mode, use_opus: useOpus, latitude: coords.lat, longitude: coords.lng })
+      startPipeline({ ...form, mode, use_opus: useOpus, strict_match: strictMatch, latitude: coords.lat, longitude: coords.lng })
       return
     }
 
@@ -64,7 +65,7 @@ export default function PipelineForm() {
       }
       const { text } = await res.json()
       setUploading(false)
-      startPipeline({ ...form, mode, use_opus: useOpus, own_offerings: text, latitude: coords.lat, longitude: coords.lng })
+      startPipeline({ ...form, mode, use_opus: useOpus, strict_match: strictMatch, own_offerings: text, latitude: coords.lat, longitude: coords.lng })
     } catch (e) {
       setUploading(false)
       setErr(e instanceof Error ? e.message : 'Upload failed.')
@@ -158,6 +159,14 @@ export default function PipelineForm() {
           <span className="text-[10px] font-mono text-[var(--mute)]">{useOpus ? 'OPUS' : 'SONNET'}</span>
         </label>
 
+        <label className={`flex items-center gap-3 cursor-pointer select-none ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
+          <input type="checkbox" checked={strictMatch} onChange={e => setStrictMatch(e.target.checked)} disabled={busy}
+                 className="sr-only peer" />
+          <span className="relative w-9 h-5 rounded-full border border-[var(--line-2)] bg-[rgba(255,255,255,.04)] peer-checked:bg-[rgba(52,211,153,.25)] peer-checked:border-[rgba(52,211,153,.5)] transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-3 after:h-3 after:rounded-full after:bg-[var(--dim)] peer-checked:after:bg-[#34d399] peer-checked:after:translate-x-4 after:transition-transform" />
+          <span className="eyebrow" style={{ letterSpacing: '.16em' }}>Strict match</span>
+          <span className="text-[10px] font-mono text-[var(--mute)]">{strictMatch ? 'EXACT' : 'GENERAL'}</span>
+        </label>
+
         {/* Gap analysis: upload own offerings */}
         {mode === 'gap_analysis' && (
           <Field id="offerings" label="Your offerings (PDF)">
@@ -180,6 +189,34 @@ export default function PipelineForm() {
         <p className="mt-4 text-sm font-mono text-[var(--alert)] bg-[rgba(242,84,45,.08)] border border-[rgba(242,84,45,.2)] rounded-lg px-3.5 py-2.5">
           {err}
         </p>
+      )}
+
+      {strictNoMatch && (
+        <div className="mt-4 rounded-lg border border-[rgba(245,165,36,.35)] bg-[rgba(245,165,36,.06)] px-4 py-4">
+          <div className="flex items-start gap-3">
+            <svg className="h-5 w-5 text-[var(--signal)] shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-[var(--bone)] mb-1">No exact competitors found</p>
+              <p className="text-[12px] text-[var(--dim)] mb-3">{error}</p>
+              <button
+                type="button"
+                onClick={() => { reset(); setStrictMatch(false) }}
+                className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider px-3 py-2 rounded-md
+                           border border-[rgba(52,211,153,.4)] text-[#34d399] bg-[rgba(52,211,153,.08)]
+                           hover:bg-[rgba(52,211,153,.18)] transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Switch to General mode
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <button type="submit" disabled={busy} className="btn-recon mt-6">

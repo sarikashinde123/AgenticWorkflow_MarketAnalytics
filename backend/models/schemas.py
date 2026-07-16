@@ -32,6 +32,7 @@ class PipelineInput(BaseModel):
     search_radius_km: int = Field(default=5, ge=1, le=50)
     max_competitors: int = Field(default=6, ge=3, le=15)
     use_opus: bool = Field(default=False)
+    strict_match: bool = Field(default=False)
     mode: PipelineMode = PipelineMode.market_overview
     # In gap_analysis mode, the user's own offerings (extracted from their PDF).
     own_offerings: Optional[str] = Field(default=None, max_length=20000)
@@ -44,6 +45,8 @@ class CompetitorInfo(BaseModel):
     name: str
     website: Optional[str] = None
     address: Optional[str] = None
+    phone: Optional[str] = None
+    source: Optional[str] = None
     priority: str = "medium"
     notes: Optional[str] = None
 

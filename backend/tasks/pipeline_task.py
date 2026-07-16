@@ -11,6 +11,7 @@ import redis
 from config import settings
 from tasks.celery_app import celery_app
 from db.database import SessionLocal, RunRecord
+import anthropic
 from agents import agent0_discovery, agent1_scraper_gen, agent2_scraper, agent3_analyst, agent4_report
 
 # Keepalive + auto-retry so a connection that goes idle between agents
@@ -57,6 +58,66 @@ def _update_db(run_id: str, **kwargs):
         db.close()
 
 
+def _strict_filter(competitors: list[dict], business_type: str, on_usage=None) -> list[dict]:
+    """Use a fast Haiku call to verify each competitor actually offers the exact service."""
+    if not competitors:
+        return competitors
+
+    names = "\n".join(
+        f"- {c.get('name', '?')} | notes: {c.get('notes', 'none')}"
+        for c in competitors
+    )
+    prompt = (
+        f"EXACT SERVICE TO MATCH: \"{business_type}\"\n\n"
+        f"Competitors found:\n{names}\n\n"
+        f"TASK: For each competitor, determine if it EXPLICITLY offers \"{business_type}\" "
+        f"as a CORE service — not a related service, not the same industry, but the EXACT "
+        f"specific service described by \"{business_type}\".\n\n"
+        f"IMPORTANT DISTINCTIONS:\n"
+        f"- \"automatic car wash\" is NOT the same as \"hand car wash\", \"car detailing\", "
+        f"\"car spa\", \"steam wash\", or \"car care\"\n"
+        f"- \"veg restaurant\" is NOT the same as \"non-veg restaurant\" or \"cafe\"\n"
+        f"- \"yoga studio\" is NOT the same as \"gym\" or \"fitness center\"\n"
+        f"- A business name containing a keyword (e.g. \"car wash\" in the name) does NOT "
+        f"mean it offers the SPECIFIC variant (e.g. \"automatic car wash\")\n\n"
+        f"Be VERY strict. When in doubt, EXCLUDE. It is better to return an empty list "
+        f"than to include a business that doesn't offer the exact service.\n\n"
+        f"Reply with ONLY a JSON array of competitor names that are a CONFIRMED exact match.\n"
+        f"If NONE match, return: []\n"
+        f"No explanation, no markdown — just the JSON array."
+    )
+
+    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    try:
+        resp = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        if on_usage:
+            on_usage(resp.usage)
+
+        text = resp.content[0].text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
+
+        approved_names = json.loads(text)
+        if not isinstance(approved_names, list):
+            return competitors
+
+        approved_lower = {n.lower().strip() for n in approved_names}
+        filtered = [c for c in competitors if c.get("name", "").lower().strip() in approved_lower]
+        print(f"[StrictFilter] Haiku approved {len(filtered)}/{len(competitors)}: {approved_names}")
+        return filtered
+
+    except Exception as e:
+        print(f"[StrictFilter] Error, skipping filter: {e}")
+        return competitors
+
+
 @celery_app.task(bind=True, name="tasks.pipeline_task.run_pipeline")
 def run_pipeline(self, run_id: str, input_data: dict):
     try:
@@ -70,6 +131,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
         max_competitors   = input_data.get("max_competitors", 6)
         use_opus          = input_data.get("use_opus", False)
         opus_model        = "claude-opus-4-8" if use_opus else None
+        strict_match      = input_data.get("strict_match", False)
         mode              = input_data.get("mode", "market_overview")
         own_offerings     = input_data.get("own_offerings")
         latitude          = input_data.get("latitude")
@@ -107,6 +169,7 @@ def run_pipeline(self, run_id: str, input_data: dict):
         input_schema = agent0_discovery.run(
             business_name, business_type, location, search_radius_km,
             max_competitors=max_competitors,
+            strict_match=strict_match,
             latitude=latitude, longitude=longitude,
             on_token=tok0, on_usage=_usage_cb(0),
             model=opus_model,
@@ -118,6 +181,23 @@ def run_pipeline(self, run_id: str, input_data: dict):
         raw_comps.sort(key=lambda c: priority_order.get(c.get("priority", "medium"), 1))
         input_schema["competitors"] = raw_comps[:max_competitors]
         print(f"[Pipeline] Agent 0 done in {time.time()-t0:.1f}s — {len(raw_comps)} → {len(input_schema['competitors'])} competitors")
+
+        # Strict-match post-filter: verify each competitor with a quick LLM call
+        if strict_match and input_schema["competitors"]:
+            input_schema["competitors"] = _strict_filter(
+                input_schema["competitors"], business_type, _usage_cb(0),
+            )
+            print(f"[Pipeline] Strict filter kept {len(input_schema['competitors'])} competitors")
+
+            if not input_schema["competitors"]:
+                _pub(run_id, "agent_done", {"agent_id": 0, "data": "No exact matches found"})
+                _update_db(run_id, status="failed", error="STRICT_NO_MATCH")
+                _pub(run_id, "error", {
+                    "message": "STRICT_NO_MATCH",
+                    "detail": f"No competitors found that explicitly offer \"{business_type}\". "
+                              f"Try switching to General mode for broader results.",
+                })
+                return
 
         _pub(run_id, "agent_done", {"agent_id": 0, "data": json.dumps(input_schema)[:200]})
 
