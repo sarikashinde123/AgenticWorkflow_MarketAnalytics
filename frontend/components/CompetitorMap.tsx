@@ -190,17 +190,15 @@ export default function CompetitorMap() {
 function addCompetitorMarker(L: any, map: any, bounds: any, comp: any, lat: number, lng: number, index: number) {
   const icon = L.divIcon({
     className: '',
-    html: `<div style="
-      width:26px;height:26px;border-radius:50%;
-      background:#37d0a6;
-      border:2.5px solid #0d2a20;
-      box-shadow:0 0 8px rgba(55,208,166,0.5);
-      display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:700;color:#0d2a20;
-    ">${index + 1}</div>`,
-    iconSize: [26, 26],
-    iconAnchor: [13, 26],
-    popupAnchor: [0, -28],
+    html: `<div style="position:relative;width:30px;height:42px;filter:drop-shadow(0 2px 4px rgba(55,208,166,0.5));">
+      <svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 0C6.716 0 0 6.716 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.716 23.284 0 15 0z" fill="#37d0a6" stroke="#0d2a20" stroke-width="1.5"/>
+      </svg>
+      <span style="position:absolute;top:5px;left:0;width:30px;text-align:center;font-size:12px;font-weight:700;color:#0d2a20;">${index + 1}</span>
+    </div>`,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -42],
   })
 
   const websiteLink = comp.website
