@@ -44,6 +44,8 @@ class CompetitorInfo(BaseModel):
     name: str
     website: Optional[str] = None
     address: Optional[str] = None
+    phone: Optional[str] = None
+    source: Optional[str] = None
     priority: str = "medium"
     notes: Optional[str] = None
 

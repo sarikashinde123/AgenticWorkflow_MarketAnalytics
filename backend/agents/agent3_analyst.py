@@ -34,14 +34,16 @@ produce a deep competitive analysis JSON with these keys:
     }
   },
   "review_sentiment": [
-    {"competitor": "...", "website": "...(from input data)", "rating": 0.0, "sentiment": "positive|neutral|negative",
+    {"competitor": "...", "website": "...(from input data)", "source": "...(where found: google, justdial, indiamart etc.)",
+     "rating": 0.0, "sentiment": "positive|neutral|negative",
      "top_positives": [], "top_negatives": []}
   ],
   "seo_analysis": [
     {"competitor": "...", "top_keywords": [], "estimated_authority": "high|medium|low"}
   ],
   "competitor_scores": [
-    {"competitor": "...", "website": "...(from input data)", "threat_score": 0-10, "threat_level": "high|medium|low",
+    {"competitor": "...", "website": "...(from input data)", "source": "...(where found: google, justdial, indiamart etc.)",
+     "threat_score": 0-10, "threat_level": "high|medium|low",
      "reasoning": "..."}
   ],
   "top_3_recommendations": ["...", "...", "..."],
@@ -89,13 +91,13 @@ OUR offerings against the market and produce a JSON that makes the gaps explicit
     "competitors": { "You": {"FeatureName": true|false}, "CompetitorName": {"FeatureName": true|false} }
   },
   "review_sentiment": [
-    {"competitor": "...", "website": "...(from input data)", "rating": 0.0, "sentiment": "positive|neutral|negative", "top_positives": [], "top_negatives": []}
+    {"competitor": "...", "website": "...(from input data)", "source": "...(where found: google, justdial, indiamart etc.)", "rating": 0.0, "sentiment": "positive|neutral|negative", "top_positives": [], "top_negatives": []}
   ],
   "seo_analysis": [
     {"competitor": "...", "top_keywords": [], "estimated_authority": "high|medium|low"}
   ],
   "competitor_scores": [
-    {"competitor": "...", "website": "...(from input data)", "threat_score": 0-10, "threat_level": "high|medium|low", "reasoning": "..."}
+    {"competitor": "...", "website": "...(from input data)", "source": "...(where found: google, justdial, indiamart etc.)", "threat_score": 0-10, "threat_level": "high|medium|low", "reasoning": "..."}
   ],
   "gap_analysis": {
     "missing_services": [ {"service": "...", "offered_by": ["..."], "impact": "..."} ],

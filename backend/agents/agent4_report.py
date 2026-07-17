@@ -53,6 +53,15 @@ COMPETITOR WEBSITE LINKS (MANDATORY):
 - Place it right after the <h3> or <strong> competitor name, on the same line.
 - The "website" field is in review_sentiment[].website and competitor_scores[].website.
 
+SOURCE BADGES (MANDATORY):
+- Right after the "Visit Website ↗" pill, add a source badge showing where the competitor
+  was found (e.g. JustDial, Google, IndiaMart, Sulekha, etc.) IF the "source" field exists.
+- HTML pattern to use:
+  <span style="display:inline-block;margin-left:6px;background:rgba(245,165,36,0.15);
+  color:#f5a524;font-size:0.65rem;padding:2px 8px;border-radius:10px;
+  font-weight:600;letter-spacing:0.03em;">SOURCE_NAME</span>
+- The "source" field is in competitor_scores[].source and review_sentiment[].source.
+
 OUTPUT: Complete valid HTML document starting with <!DOCTYPE html>
 Real data only — zero placeholders.
 """
@@ -101,6 +110,15 @@ COMPETITOR WEBSITE LINKS (MANDATORY):
 - Place it right after the <h3> or <strong> competitor name, on the same line.
 - The "website" field is in review_sentiment[].website and competitor_scores[].website.
 
+SOURCE BADGES (MANDATORY):
+- Right after the "Visit Website ↗" pill, add a source badge showing where the competitor
+  was found (e.g. JustDial, Google, IndiaMart, Sulekha, etc.) IF the "source" field exists.
+- HTML pattern to use:
+  <span style="display:inline-block;margin-left:6px;background:rgba(245,165,36,0.15);
+  color:#f5a524;font-size:0.65rem;padding:2px 8px;border-radius:10px;
+  font-weight:600;letter-spacing:0.03em;">SOURCE_NAME</span>
+- The "source" field is in competitor_scores[].source and review_sentiment[].source.
+
 OUTPUT: Complete valid HTML document starting with <!DOCTYPE html>
 Real data only — zero placeholders.
 """
@@ -113,28 +131,34 @@ VISIT_PILL = (
     'vertical-align:middle;">Visit Website ↗</a>'
 )
 
+SOURCE_BADGE = (
+    '<span style="display:inline-block;margin-left:6px;background:rgba(245,165,36,0.15);'
+    'color:#f5a524;font-size:0.65rem;padding:2px 8px;border-radius:10px;'
+    'vertical-align:middle;font-weight:600;letter-spacing:0.03em;">{source}</span>'
+)
 
-def _inject_website_buttons(html: str, website_map: dict[str, str]) -> str:
-    """Post-process HTML to inject 'Visit Website' pill buttons next to competitor names."""
+
+def _inject_website_buttons(html: str, website_map: dict[str, str], source_map: dict[str, str]) -> str:
+    """Post-process HTML to inject 'Visit Website' pill buttons and source badges next to competitor names."""
     for name, url in website_map.items():
         if not url:
             continue
         pill = VISIT_PILL.format(url=url)
-        # Match competitor name in heading tags (h2, h3, h4) or <strong>/<b>
-        # Pattern: <h3>CompetitorName</h3> → <h3>CompetitorName <a...>Visit Website ↗</a></h3>
+        source = source_map.get(name, "")
+        badge = SOURCE_BADGE.format(source=source) if source else ""
+        combined = f" {pill}{badge}"
         for tag in ["h2", "h3", "h4"]:
             pattern = re.compile(
                 rf"(<{tag}[^>]*>)(.*?)({re.escape(name)})(.*?)(</{tag}>)",
                 re.IGNORECASE,
             )
-            html = pattern.sub(rf"\1\2\3 {pill}\4\5", html, count=0)
-        # Also match <strong>Name</strong> and <b>Name</b>
+            html = pattern.sub(rf"\1\2\3{combined}\4\5", html, count=0)
         for tag in ["strong", "b"]:
             pattern = re.compile(
                 rf"(<{tag}[^>]*>)(.*?)({re.escape(name)})(.*?)(</{tag}>)",
                 re.IGNORECASE,
             )
-            html = pattern.sub(rf"\1\2\3 {pill}\4\5", html, count=0)
+            html = pattern.sub(rf"\1\2\3{combined}\4\5", html, count=0)
     return html
 
 
@@ -172,16 +196,20 @@ def run(input_schema: dict, analysis: dict, mode: str = "market_overview", on_ch
         if on_usage:
             on_usage(stream.get_final_message().usage)
 
-    # Build name → URL map from input_schema competitors
+    # Build name → URL and name → source maps from input_schema competitors
     website_map: dict[str, str] = {}
+    source_map: dict[str, str] = {}
     for c in input_schema.get("competitors", []):
         name = c.get("name", "").strip()
         url = c.get("website", "").strip()
+        source = c.get("source", "").strip()
         if name and url:
             website_map[name] = url
+        if name and source:
+            source_map[name] = source
 
-    # Inject "Visit Website ↗" buttons next to competitor names in the HTML
+    # Inject "Visit Website ↗" buttons and source badges next to competitor names
     if website_map:
-        full_html = _inject_website_buttons(full_html, website_map)
+        full_html = _inject_website_buttons(full_html, website_map, source_map)
 
     return full_html
